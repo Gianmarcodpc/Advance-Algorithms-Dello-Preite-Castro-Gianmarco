@@ -19,26 +19,33 @@ int main() {
 
 boost::adjacency_list<>* createGraph(int numVertex) {
 
-	boost::adjacency_list<>* g = new boost::adjacency_list<>;
-	boost::adjacency_list<>::vertex_descriptor *v = new boost::adjacency_list<>::vertex_descriptor[numVertex];
+	/*boost::adjacency_list<>* */ auto g = new boost::adjacency_list<>;
+	/* boost::adjacency_list<>::vertex_descriptor* */ auto v = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
 		v[i] = add_vertex(*g);
 	}
 	delete[] v;
 
+	return g;
+
 }
 
-/*
-std::unique_ptr<boost::adjacency_list<>> createGraph(int numVertex) {
 
-	std::unique_ptr<boost::adjacency_list<>> g = std::make_unique<boost::adjacency_list<>>;
-	boost::adjacency_list<>::vertex_descriptor *v = new boost::adjacency_list<>::vertex_descriptor;
+
+
+std::unique_ptr<boost::adjacency_list<>> createGraph2(int numVertex) {
+
+	std::unique_ptr<boost::adjacency_list<>> g = std::make_unique<boost::adjacency_list<>>();
+	/* boost::adjacency_list<>::vertex_descriptor* */ auto v = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
-		auto v1 = add_vertex(g);
+		v[i] = add_vertex(*g);
 	}
+	delete[] v;
+
+	return g;
 
 }
-*/
+
 
 
 
