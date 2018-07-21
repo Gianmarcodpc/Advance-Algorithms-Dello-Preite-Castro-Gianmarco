@@ -9,30 +9,26 @@
 typedef boost::adjacency_list	<boost::vecS, boost::vecS,boost::directedS,boost::no_property,boost::no_property> DirectedGraph;
 
 
-DirectedGraph* createRandomGraph(int numVertex);
+DirectedGraph* createRandomDirectedGraph(int numVertex);
 std::unique_ptr<boost::adjacency_list<>> createGraph2(int numVertex);
-void saveDirectedGraphToFile(DirectedGraph* g,int numVertex);
+void saveDirectedGraphToFile(DirectedGraph* g,int numVertex, int index);
+void generateAndSaveRandomGraphs(int numGraphs);
 
 
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
-	DirectedGraph* g;
-	g = createRandomGraph(5);
-	saveDirectedGraphToFile(g, 5);
-
-	delete g;
+	
+	generateAndSaveRandomGraphs(10);
 	std::cin.get();
 	return 0;
 }
 
 
-
-DirectedGraph* createRandomGraph(int numVertex) {
+DirectedGraph* createRandomDirectedGraph(int numVertex) {
 
 	boost::random::mt19937 gen(time(NULL));
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
-	std::cout << "Treshold " << treshold << std::endl;
 
 	/*DirectedGraph* */ auto g = new DirectedGraph;
 	/* boost::adjacency_list<>::vertex_descriptor* */ auto v = new boost::adjacency_list<>::vertex_descriptor[numVertex];
@@ -44,9 +40,7 @@ DirectedGraph* createRandomGraph(int numVertex) {
 			randValue = dist(gen);
 			if (randValue >= treshold) {
 				auto e = boost::add_edge(i, j, *g);
-				std::cout << "Added Edge from " << i << " to " << j << std::endl;
 			}
-			std::cout << "randValue " << j+i*numVertex << " " << randValue << std::endl;
 		}
 	}
 	delete[] v;
@@ -54,14 +48,36 @@ DirectedGraph* createRandomGraph(int numVertex) {
 
 }
 
-void saveDirectedGraphToFile(DirectedGraph* g, int numVertex) {
+void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
 	
-	std::ofstream writer("./DirectedGraphs/MyFirstDirectedGraph.txt");
+
+	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
+	std::string path = "./DirectedGraphs/" + fileName + ".txt";
+	std::ofstream writer(path);
 	boost::write_graphviz(writer, *g);
 	return;
 }
 
+void generateAndSaveRandomGraphs(int numGraphs) {
+	int numVertex = 5;
+	DirectedGraph* g;
+	for (int i = 0; i < 4; i++) {
+		switch (i) {
+		case 1: numVertex = 10;
+			break;
+		case 2: numVertex = 20;
+			break;
+		case 3: numVertex = 50;
+			break;
+		}
+		for (int j = 0; j < numGraphs / 4; j++) {
+			g = createRandomDirectedGraph(numVertex);
+			saveDirectedGraphToFile(g, numVertex, j);
+			delete g;
+		}
+	}
 
+}
 
 
 std::unique_ptr<boost::adjacency_list<>> createGraph2(int numVertex) {
