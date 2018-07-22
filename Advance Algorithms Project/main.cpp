@@ -10,7 +10,12 @@
 #include <set>
 
 
-
+/**
+ * Vertex Data used to store the information used by the Tarjan version of the algorithm
+ * lowpt, lowvine and number are the same as used in the pseudo-code of the algorithm.
+ * number is initialized to -1 as a convention to say that a vertex is not yet numbered
+ * component is an integer indicating to which of the SCC of the grap the node belongs to after the algorithm is done running.
+ */
 struct TarjanVertexData {
 	int lowpt;
 	int lowvine;
@@ -18,6 +23,13 @@ struct TarjanVertexData {
 	int component;
 };
 
+/**
+* Vertex Data used to store the information used by the Nuutila version of the algorithm
+* root points to the root vertex of any given vertex.
+* inComponent is the same as in the pseudo-code of the algorithm
+* visited is a boolean to keep track of when a node has been visited by the algorithm
+* visitIndex is an integer keeping track of the order vertices are visited
+*/
 struct NuutilaVertexData {
 	boost::adjacency_list<>::vertex_descriptor root;
 	bool inComponent;
@@ -25,6 +37,10 @@ struct NuutilaVertexData {
 	int visitIndex;
 };
 
+/**
+* Vertex Data used to store the information used by the Pearce version of the algorithm
+* both rindex and root are the same as in the pseudo-code of the algorithm
+*/
 struct PearceVertexData {
 	int rindex;
 	bool root = false;
@@ -32,47 +48,137 @@ struct PearceVertexData {
 
 
 
+/**
+* Simple typedef of a Directed Graph
+*/
 typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, boost::no_property, boost::no_property> DirectedGraph;
+
+/**
+* typedef of a Directed Graph containing in it's vertices the TarjanVertexData
+*/
 typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, TarjanVertexData, boost::no_property> TarjanDirectedGraph;
+
+/**
+* typedef of a Directed Graph containing in it's vertices the NuutilaVertexData
+*/
 typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, NuutilaVertexData, boost::no_property> NuutilaDirectedGraph;
+
+/**
+* typedef of a Directed Graph containing in it's vertices the PearceVertexData
+*/
 typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, PearceVertexData, boost::no_property> PearceDirectedGraph;
 
 
+
+/**
+* Function identifier of createRandomDirectedGraph. Further documentation on the function code body.
+*/
 DirectedGraph* createRandomDirectedGraph(int numVertex);
+
+/**
+* Function identifier of createRandomTarjanDirectedGraph. Further documentation on the function code body.
+*/
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex);
+
+/**
+* Function identifier of createRandomNuutilaDirectedGraph. Further documentation on the function code body.
+*/
 NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex);
+
+/**
+* Function identifier of createRandomPearceDirectedGraph. Further documentation on the function code body.
+*/
 PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex);
+
+/**
+* Function identifier of saveDirectedGraphToFile. Further documentation on the function code body.
+*/
 void saveDirectedGraphToFile(DirectedGraph* g,int numVertex, int index);
-void saveTarjanDirectedGraphToFile(TarjanDirectedGraph* g, int numVertex, int index);
+
+/**
+* Function identifier of generateAndSaveRandomGraphs. Further documentation on the function code body.
+*/
 void generateAndSaveRandomGraphs(int numGraphs);
+
+
+
+/**
+* Function identifier of tarjanSCC. Further documentation on the function code body.
+*/
 TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g);
+
+/**
+* Function identifier of tarjanStrongConnect. Further documentation on the function code body.
+*/
 void tarjanStrongConnect(boost::adjacency_list<>::vertex_descriptor* v, TarjanDirectedGraph* g, std::stack<TarjanDirectedGraph::vertex_descriptor>* points, std::set<TarjanDirectedGraph::vertex_descriptor>* pointsSet, int* i,int* componentCounter, TarjanDirectedGraph* resultGraph);
+
+/**
+* Function identifier of displayTarjanSCC. Further documentation on the function code body.
+*/
 TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g);
 
 
+
+/**
+* Function identifier of nuutilaSCC. Further documentation on the function code body.
+*/
 void nuutilaSCC(NuutilaDirectedGraph* g);
+
+/**
+* Function identifier of nuutilaVisit. Further documentation on the function code body.
+*/
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGraph* g, int* counter, std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet);
 
 
+
+/**
+* Function identifier of imperativePearceSCC. Further documentation on the function code body.
+*/
 void imperativePearceSCC(PearceDirectedGraph* g);
+
+/**
+* Function identifier of pearceVisit. Further documentation on the function code body.
+*/
 void pearceVisit(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+
+/**
+* Function identifier of pearceBeginVisiting. Further documentation on the function code body.
+*/
 void pearceBeginVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+
+/**
+* Function identifier of pearceVisitLoop. Further documentation on the function code body.
+*/
 void pearceVisitLoop(PearceDirectedGraph* g, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+
+/**
+* Function identifier of pearceFinishVisiting. Further documentation on the function code body.
+*/
 void pearceFinishVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+
+/**
+* Function identifier of pearceBeginEdge. Further documentation on the function code body.
+*/
 bool pearceBeginEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+
+/**
+* Function identifier of pearceFinishEdge. Further documentation on the function code body.
+*/
 void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i);
 
 
 
 
-
+/**
+ * Simple main function that only calls the creation of a graph, saving of a graph to file, and one of the algorithms.
+ */
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
 
 
 
-	PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
-	imperativePearceSCC(g);
+	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
+	//imperativePearceSCC(g);
 	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
 	//nuutilaSCC(g);
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
@@ -83,32 +189,41 @@ int main() {
 	return 0;
 }
 
-
+/**
+* Creates a random Directed Graph with exactly numVertex vertices.
+* Uses an uniform distribution in the range 1 to 10000.
+* First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
+* and if the random value is greater than the treshold, the edge is added to the graph.
+*/
 DirectedGraph* createRandomDirectedGraph(int numVertex) {
 
 	boost::random::mt19937 gen(time(NULL));
 	boost::random::uniform_int_distribution<> dist(1, 10000);
-	int treshold = dist(gen);
+	int treshold = dist(gen); //sets treshold
 	
-	/*DirectedGraph* */ auto g = new DirectedGraph;
-	/* boost::adjacency_list<>::vertex_descriptor* */ auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
+	auto g = new DirectedGraph;
+	auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
-		vertices[i] = add_vertex(*g);
+		vertices[i] = add_vertex(*g); //adds numVertex vertices to the graph
 	}
 	for (int i = 0, randValue = 0; i < numVertex; i++) {
 		for (int j = 0; j < numVertex; j++) {
-			randValue = dist(gen);
-			if (randValue >= treshold) {
-				auto e = boost::add_edge(i, j, *g);
+			randValue = dist(gen); //random value for the edge
+			if (randValue >= treshold) { 
+				auto e = boost::add_edge(i, j, *g); //adds edge if the value is greater than the treshold
 			}
 		}
 	}
-
 	delete[] vertices;
 	return g;
-
 }
 
+/**
+* Creates a random Tarjan Directed Graph with exactly numVertex vertices.
+* Uses an uniform distribution in the range 1 to 10000.
+* First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
+* and if the random value is greater than the treshold, the edge is added to the graph.
+*/
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
 	boost::random::mt19937 gen(1);
@@ -134,6 +249,12 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
 }
 
+/**
+* Creates a random Nuutila DIrected Graph with exactly numVertex vertices.
+* Uses an uniform distribution in the range 1 to 10000.
+* First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
+* and if the random value is greater than the treshold, the edge is added to the graph.
+*/
 NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 
 	boost::random::mt19937 gen(1);
@@ -159,6 +280,12 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 
 }
 
+/**
+* Creates a random Pearce Directed Graph with exactly numVertex vertices.
+* Uses an uniform distribution in the range 1 to 10000.
+* First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
+* and if the random value is greater than the treshold, the edge is added to the graph.
+*/ 
 PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
 
 	boost::random::mt19937 gen(1);
@@ -184,8 +311,10 @@ PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
 
 }
 
+/**
+* Saves a Directed Graph into a file, naming it DirectedGraph, followed by the number of vertices, and then an id.
+*/
 void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
-
 
 	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
 	std::string path = "./DirectedGraphs/" + fileName + ".txt";
@@ -194,16 +323,10 @@ void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
 	return;
 }
 
-void saveTarjanDirectedGraphToFile(TarjanDirectedGraph* g, int numVertex, int index) {
-	
-
-	std::string fileName = "TarjanDirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
-	std::string path = "./TarjanDirectedGraphs/" + fileName + ".txt";
-	std::ofstream writer(path);
-	boost::write_graphviz(writer, *g);
-	return;
-}
-
+/**
+* Generates numGraphs random graphs and saves all of them to file.
+* A fourth of numGraph graphs are generated with 5, 10, 20 and 50 vertexes
+*/
 void generateAndSaveRandomGraphs(int numGraphs) {
 	int numVertex = 5;
 	DirectedGraph* g;
@@ -225,6 +348,10 @@ void generateAndSaveRandomGraphs(int numGraphs) {
 
 }
 
+
+/**
+*
+*/
 TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g) {
 	TarjanDirectedGraph* resultGraph = tarjanSCC(g);
 	TarjanDirectedGraph tempGraph;
@@ -238,6 +365,9 @@ TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g) {
 	return resultGraph;
 }
 
+/**
+*
+*/
 TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g) {
 	auto i = new int;
 	*i = 0;
@@ -268,7 +398,9 @@ TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g) {
 
 }
 
-
+/**
+*
+*/
 void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirectedGraph* g, std::stack<TarjanDirectedGraph::vertex_descriptor>* points, std::set<TarjanDirectedGraph::vertex_descriptor>* pointsSet, int* i,int* componentCounter, TarjanDirectedGraph* resultGraph) {
 	TarjanDirectedGraph g2 = *g;
 	g2[*v].lowpt = (*i);
@@ -317,6 +449,9 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 }
 
 
+/**
+*
+*/
 void nuutilaSCC(NuutilaDirectedGraph* g) {
 	auto counter = new int;
 	*counter = 0;
@@ -340,6 +475,9 @@ void nuutilaSCC(NuutilaDirectedGraph* g) {
 
 }
 
+/**
+*
+*/
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGraph* g, int* counter, std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet) {
 	NuutilaDirectedGraph tempGraph = *g;
 	tempGraph[*v].root = *v;
@@ -384,8 +522,9 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGra
 }
 
 
-
-
+/**
+*
+*/
 void imperativePearceSCC(PearceDirectedGraph* g) {
 	
 	auto verticesStack = new std::stack<PearceDirectedGraph::vertex_descriptor>;
@@ -407,7 +546,9 @@ void imperativePearceSCC(PearceDirectedGraph* g) {
 	delete index;
 }
 
-
+/**
+*
+*/
 void pearceVisit(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
 	pearceBeginVisiting(g, v, verticesStack, iteratorStack,c,index);
 	while (!verticesStack->empty()) {
@@ -415,6 +556,9 @@ void pearceVisit(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor*
 	}
 }
 
+/**
+*
+*/
 void pearceBeginVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack,int* c, int* index) {
 	verticesStack->push(*v);
 	iteratorStack->push(0);
@@ -427,6 +571,9 @@ void pearceBeginVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_des
 
 }
 
+/**
+*
+*/
 void pearceVisitLoop(PearceDirectedGraph* g, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
 	auto v = new PearceDirectedGraph::vertex_descriptor;
 	auto i = new int;
@@ -451,6 +598,9 @@ void pearceVisitLoop(PearceDirectedGraph* g, std::stack<PearceDirectedGraph::ver
 	delete edgeLenght;
 }
 
+/**
+*
+*/
 void pearceFinishVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
 	verticesStack->pop();
 	iteratorStack->pop();
@@ -474,6 +624,9 @@ void pearceFinishVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_de
 	}
 }
 
+/**
+*
+*/
 bool pearceBeginEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
 	/*
 	auto iterations = adjacent_vertices(*v, *g);
@@ -504,6 +657,9 @@ bool pearceBeginEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descrip
 	}
 }
 
+/**
+*
+*/
 void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i) {
 	PearceDirectedGraph tempGraph;
 	tempGraph = *g;
