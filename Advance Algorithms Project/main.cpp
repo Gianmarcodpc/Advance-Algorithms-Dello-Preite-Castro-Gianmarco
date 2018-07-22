@@ -193,7 +193,8 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 	auto iterations = adjacent_vertices(*v, *g);
 	for (; iterations.first < iterations.second; iterations.first++) {
 		if (g2[*iterations.first].number == -1) {
-			tarjanStrongConnect(v, g, points, pointsSet, i, componentCounter, resultGraph);
+			TarjanDirectedGraph::vertex_descriptor v2 = *iterations.first;
+			tarjanStrongConnect(&v2, g, points, pointsSet, i, componentCounter, resultGraph);
 			g2[*v].lowpt = std::min(g2[*v].lowpt, g2[*iterations.first].lowpt);
 			g2[*v].lowvine = std::min(g2[*v].lowvine, g2[*iterations.first].lowvine);
 			*g = g2;
