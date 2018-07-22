@@ -18,9 +18,17 @@ struct TarjanVertexData {
 	int component;
 };
 
+struct NuutilaVertexData {
+	boost::adjacency_list<>::vertex_descriptor root;
+	bool inComponent;
+	bool visited = false;
+	int visitIndex;
+};
+
 
 typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, boost::no_property, boost::no_property> DirectedGraph;
 typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, TarjanVertexData, boost::no_property> TarjanDirectedGraph;
+typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, NuutilaVertexData, boost::no_property> NuutilaDirectedGraph;
 
 
 DirectedGraph* createRandomDirectedGraph(int numVertex);
@@ -31,6 +39,10 @@ void generateAndSaveRandomGraphs(int numGraphs);
 TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g);
 void tarjanStrongConnect(boost::adjacency_list<>::vertex_descriptor* v, TarjanDirectedGraph* g, std::stack<TarjanDirectedGraph::vertex_descriptor>* points, std::set<TarjanDirectedGraph::vertex_descriptor>* pointsSet, int* i,int* componentCounter, TarjanDirectedGraph* resultGraph);
 TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g);
+
+
+void nuutilaSCC(NuutilaDirectedGraph* g);
+void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGraph* g, int* counter, std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet);
 
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
@@ -150,9 +162,9 @@ TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g) {
 }
 
 TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g) {
-	auto i = new int();
+	auto i = new int;
 	*i = 0;
-	auto componentCounter = new int();
+	auto componentCounter = new int;
 	*componentCounter = 0;
 	auto v = new TarjanDirectedGraph::vertex_descriptor;
 	*v = *boost::vertices(*g).first;
@@ -225,5 +237,66 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 		}
 	}
 	
+}
+
+
+void nuutilaSCC(NuutilaDirectedGraph* g) {
+	auto counter = new int;
+	*counter = 0;
+	auto verticesStack = new std::stack<NuutilaDirectedGraph::vertex_descriptor>;
+	auto verticesSet = new std::set<NuutilaDirectedGraph::vertex_descriptor>;
+	NuutilaDirectedGraph fakeGraph;
+	auto fakeVertex = add_vertex(*g);
+	fakeGraph[fakeVertex].visitIndex = -1;
+	verticesStack->push(fakeVertex);
+	verticesSet->insert(fakeVertex);
+	auto iterations = boost::vertices(*g);
+	for (; iterations.first < iterations.second; iterations.first++) {
+		NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
+		nuutilaVisit(&tempV, g, counter, verticesStack, verticesSet);
+	}
+	//add all the deletes
+
+}
+
+void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGraph* g, int* counter, std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet) {
+	NuutilaDirectedGraph tempGraph = *g;
+	tempGraph[*v].root = *v;
+	tempGraph[*v].inComponent = false;
+	tempGraph[*v].visitIndex = *counter;
+	(*counter)++;
+	verticesStack->push(*v);
+	verticesSet->insert(*v);
+	*g = tempGraph;
+	auto iterations = adjacent_vertices(*v, *g);
+	for (; iterations.first < iterations.second; iterations.first++) {
+		if (tempGraph[*iterations.first].visited == false) {
+			NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
+			nuutilaVisit(&tempV, g, counter, verticesStack, verticesSet);
+		}
+		//auto tempV2 = tempGraph[*iterations.first].root;
+		if (!tempGraph[tempGraph[*iterations.first].root].inComponent) {
+			tempGraph[*v].root = std::min(tempGraph[*v].visitIndex, tempGraph[*iterations.first].visitIndex);
+			*g = tempGraph;
+		}
+		if (tempGraph[*v].root == *v) {
+			if (tempGraph[verticesStack->top()].visitIndex>tempGraph[*v].visitIndex) {
+				while (tempGraph[verticesStack->top()].visitIndex >= tempGraph[*v].visitIndex) {
+					auto w = verticesStack->top();
+					verticesSet->erase(w);
+					verticesStack->pop();
+					tempGraph[w].inComponent = true;
+					*g = tempGraph;
+				}
+			}
+			else {
+				tempGraph[*v].inComponent = true;
+			}
+		}
+		else if(verticesSet->find(tempGraph[*v].root) == verticesSet->end()){
+			verticesStack->push(tempGraph[*v].root);
+			verticesSet->insert(tempGraph[*v].root);
+		}
+	}
 }
 
