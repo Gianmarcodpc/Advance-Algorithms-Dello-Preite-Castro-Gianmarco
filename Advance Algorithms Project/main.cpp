@@ -33,6 +33,7 @@ typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, Nuuti
 
 DirectedGraph* createRandomDirectedGraph(int numVertex);
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex);
+NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex);
 void saveDirectedGraphToFile(DirectedGraph* g,int numVertex, int index);
 void saveTarjanDirectedGraphToFile(TarjanDirectedGraph* g, int numVertex, int index);
 void generateAndSaveRandomGraphs(int numGraphs);
@@ -47,7 +48,8 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGra
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
 
-
+	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	nuutilaSCC(g);
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
 	//delete sccGraph;
@@ -89,6 +91,31 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 	int treshold = dist(gen);
 
 	/*DirectedGraph* */ auto g = new TarjanDirectedGraph;
+	/* boost::adjacency_list<>::vertex_descriptor* */ auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
+	for (int i = 0; i < numVertex; i++) {
+		vertices[i] = add_vertex(*g);
+	}
+	for (int i = 0, randValue = 0; i < numVertex; i++) {
+		for (int j = 0; j < numVertex; j++) {
+			randValue = dist(gen);
+			if (randValue >= treshold) {
+				auto e = boost::add_edge(i, j, *g);
+			}
+		}
+	}
+
+	delete[] vertices;
+	return g;
+
+}
+
+NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
+
+	boost::random::mt19937 gen(1);
+	boost::random::uniform_int_distribution<> dist(1, 10000);
+	int treshold = dist(gen);
+
+	/*DirectedGraph* */ auto g = new NuutilaDirectedGraph;
 	/* boost::adjacency_list<>::vertex_descriptor* */ auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
 		vertices[i] = add_vertex(*g);
@@ -203,8 +230,8 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 	pointsSet->insert(*v);
 	TarjanDirectedGraph::vertex_descriptor top;
 
-	auto iterations = adjacent_vertices(*v, *g);
-	for (; iterations.first < iterations.second; iterations.first++) {
+	
+	for (auto iterations = adjacent_vertices(*v, *g); iterations.first < iterations.second; iterations.first++) {
 		if (g2[*iterations.first].number == -1) {
 			TarjanDirectedGraph::vertex_descriptor v2 = *iterations.first;
 			tarjanStrongConnect(&v2, g, points, pointsSet, i, componentCounter, resultGraph);
@@ -246,8 +273,8 @@ void nuutilaSCC(NuutilaDirectedGraph* g) {
 	auto verticesStack = new std::stack<NuutilaDirectedGraph::vertex_descriptor>;
 	auto verticesSet = new std::set<NuutilaDirectedGraph::vertex_descriptor>;
 	NuutilaDirectedGraph fakeGraph;
-	auto fakeVertex = add_vertex(*g);
-	fakeGraph[fakeVertex].visitIndex = -1;
+	auto fakeVertex = add_vertex(fakeGraph);
+	fakeGraph[fakeVertex].visitIndex = 0;
 	verticesStack->push(fakeVertex);
 	verticesSet->insert(fakeVertex);
 	auto iterations = boost::vertices(*g);
@@ -256,28 +283,33 @@ void nuutilaSCC(NuutilaDirectedGraph* g) {
 		nuutilaVisit(&tempV, g, counter, verticesStack, verticesSet);
 	}
 	//add all the deletes
+	delete counter;
+	delete verticesStack;
+	delete verticesSet;
+
 
 }
 
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGraph* g, int* counter, std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet) {
 	NuutilaDirectedGraph tempGraph = *g;
 	tempGraph[*v].root = *v;
-	tempGraph[*v].inComponent = false;
+	tempGraph[*v].inComponent = false; 
+	tempGraph[*v].visited = true;
 	tempGraph[*v].visitIndex = *counter;
 	(*counter)++;
 	verticesStack->push(*v);
 	verticesSet->insert(*v);
 	*g = tempGraph;
-	auto iterations = adjacent_vertices(*v, *g);
-	for (; iterations.first < iterations.second; iterations.first++) {
+	auto iterations = adjacent_vertices(*v, tempGraph);
+	//THERE IS AN ERROR HERE. DEREFERENCING ITERATOR
+	while(iterations.first != iterations.second){	
 		if (tempGraph[*iterations.first].visited == false) {
 			NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
-			nuutilaVisit(&tempV, g, counter, verticesStack, verticesSet);
+			nuutilaVisit(&tempV, &tempGraph, counter, verticesStack, verticesSet);
 		}
 		//auto tempV2 = tempGraph[*iterations.first].root;
 		if (!tempGraph[tempGraph[*iterations.first].root].inComponent) {
 			tempGraph[*v].root = std::min(tempGraph[*v].visitIndex, tempGraph[*iterations.first].visitIndex);
-			*g = tempGraph;
 		}
 		if (tempGraph[*v].root == *v) {
 			if (tempGraph[verticesStack->top()].visitIndex>tempGraph[*v].visitIndex) {
@@ -286,7 +318,6 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGra
 					verticesSet->erase(w);
 					verticesStack->pop();
 					tempGraph[w].inComponent = true;
-					*g = tempGraph;
 				}
 			}
 			else {
@@ -297,6 +328,8 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGra
 			verticesStack->push(tempGraph[*v].root);
 			verticesSet->insert(tempGraph[*v].root);
 		}
+		iterations.first++;
 	}
+	*g = tempGraph;
 }
 
