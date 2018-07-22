@@ -36,9 +36,9 @@ int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
 
 
-	TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
-	TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
-	delete sccGraph;
+	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
+	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
+	//delete sccGraph;
 	//generateAndSaveRandomGraphs(10);
 	std::cin.get();
 	return 0;
@@ -72,7 +72,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(time(NULL));
+	boost::random::mt19937 gen(1);
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -190,6 +190,7 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 	points->push(*v);
 	pointsSet->insert(*v);
 	TarjanDirectedGraph::vertex_descriptor top;
+
 	auto iterations = adjacent_vertices(*v, *g);
 	for (; iterations.first < iterations.second; iterations.first++) {
 		if (g2[*iterations.first].number == -1) {
@@ -199,6 +200,8 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 			g2[*v].lowvine = std::min(g2[*v].lowvine, g2[*iterations.first].lowvine);
 			*g = g2;
 		}
+		// ELSE IF FOR ANCESTOR
+
 		else if (g2[*iterations.first].number<g2[*v].number) {
 			if (pointsSet->find(*iterations.first) == pointsSet->end()) {
 				g2[*v].lowvine = std::min(g2[*v].lowvine, g2[*iterations.first].number);
@@ -208,14 +211,17 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, TarjanDirect
 		}
 	}
 	if ((g2[*v].lowpt == g2[*v].number)&&(g2[*v].lowvine== g2[*v].number)) {
-		*componentCounter++;
+		(*componentCounter)++;
 		top = points->top();
-		while (g2[top].number>= g2[*v].number) {
-			resultGraph->added_vertex(points->top());
+		while (g2[top].number>=g2[*v].number) {
+			//SOMETHING WRONG
+			resultGraph->added_vertex(top);
 			TarjanDirectedGraph g3 = *resultGraph;
-			g3[points->top()].component = *componentCounter;
-			pointsSet->erase(points->top());
+			g3[top].component = *componentCounter;
+			*resultGraph = g3;
+			pointsSet->erase(top);
 			points->pop();
+			top = points->top();
 		}
 	}
 	
