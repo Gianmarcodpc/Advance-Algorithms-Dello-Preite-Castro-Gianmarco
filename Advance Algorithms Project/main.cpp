@@ -41,6 +41,7 @@ typedef boost::adjacency_list	<boost::vecS, boost::vecS, boost::directedS, Pearc
 DirectedGraph* createRandomDirectedGraph(int numVertex);
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex);
 NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex);
+PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex);
 void saveDirectedGraphToFile(DirectedGraph* g,int numVertex, int index);
 void saveTarjanDirectedGraphToFile(TarjanDirectedGraph* g, int numVertex, int index);
 void generateAndSaveRandomGraphs(int numGraphs);
@@ -52,11 +53,28 @@ TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g);
 void nuutilaSCC(NuutilaDirectedGraph* g);
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGraph* g, int* counter, std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet);
 
+
+void imperativePearceSCC(PearceDirectedGraph* g);
+void pearceVisit(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+void pearceBeginVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+void pearceVisitLoop(PearceDirectedGraph* g, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+void pearceFinishVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+bool pearceBeginEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index);
+void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i);
+
+
+
+
+
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
 
-	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	nuutilaSCC(g);
+
+
+	PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
+	imperativePearceSCC(g);
+	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	//nuutilaSCC(g);
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
 	//delete sccGraph;
@@ -97,8 +115,8 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
-	/*DirectedGraph* */ auto g = new TarjanDirectedGraph;
-	/* boost::adjacency_list<>::vertex_descriptor* */ auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
+	auto g = new TarjanDirectedGraph;
+	auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
 		vertices[i] = add_vertex(*g);
 	}
@@ -122,8 +140,33 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
-	/*DirectedGraph* */ auto g = new NuutilaDirectedGraph;
-	/* boost::adjacency_list<>::vertex_descriptor* */ auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
+	auto g = new NuutilaDirectedGraph;
+	auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
+	for (int i = 0; i < numVertex; i++) {
+		vertices[i] = add_vertex(*g);
+	}
+	for (int i = 0, randValue = 0; i < numVertex; i++) {
+		for (int j = 0; j < numVertex; j++) {
+			randValue = dist(gen);
+			if (randValue >= treshold) {
+				auto e = boost::add_edge(i, j, *g);
+			}
+		}
+	}
+
+	delete[] vertices;
+	return g;
+
+}
+
+PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
+
+	boost::random::mt19937 gen(1);
+	boost::random::uniform_int_distribution<> dist(1, 10000);
+	int treshold = dist(gen);
+
+	auto g = new PearceDirectedGraph;
+	auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
 		vertices[i] = add_vertex(*g);
 	}
@@ -346,10 +389,7 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v, NuutilaDirectedGra
 void imperativePearceSCC(PearceDirectedGraph* g) {
 	
 	auto verticesStack = new std::stack<PearceDirectedGraph::vertex_descriptor>;
-	auto verticesSet = new std::set<PearceDirectedGraph::vertex_descriptor>; // check if it can be removed
-
 	auto iteratorStack = new std::stack<int>;
-	auto iteratorSet = new std::set<int>;
 	auto c = new int;
 	auto index = new int;
 
@@ -360,13 +400,18 @@ void imperativePearceSCC(PearceDirectedGraph* g) {
 		PearceDirectedGraph::vertex_descriptor tempV = *iterations.first;
 		pearceVisit(g, &tempV,verticesStack,iteratorStack,c,index);
 	}
+
+	delete verticesStack;
+	delete iteratorStack;
+	delete c;
+	delete index;
 }
 
 
 void pearceVisit(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
 	pearceBeginVisiting(g, v, verticesStack, iteratorStack,c,index);
-	while (!verticesStack->empty) {
-		pearceVisitLoop();
+	while (!verticesStack->empty()) {
+		pearceVisitLoop(g, verticesStack, iteratorStack, c, index);
 	}
 }
 
@@ -382,46 +427,76 @@ void pearceBeginVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_des
 
 }
 
-void pearceVisitLoop(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
+void pearceVisitLoop(PearceDirectedGraph* g, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
 	auto v = new PearceDirectedGraph::vertex_descriptor;
 	auto i = new int;
 	*v = verticesStack->top();
 	*i = iteratorStack->top();
 	auto edgeLenght = new int;
 	*edgeLenght = out_degree(*v, *g);
-
-
-
-
 	while (*i <= *edgeLenght) {
 		if (*i > 0) {
-			(*i)--;
-			pearceFinishEdge(g, v, i);
+			int j = *i - 1;
+			pearceFinishEdge(g, v, &j);
 		}
-		if (*i < *edgeLenght && pearceBeginEdge(g, v, i, verticesStack, iteratorStack)) {
+		if (*i < *edgeLenght && pearceBeginEdge(g, v, i, verticesStack, iteratorStack, c, index)) {
 			return;
 		}
 		(*i)++;
 	}
-	pearceFinishVisting(v);
+
+	pearceFinishVisiting(g, v, verticesStack, iteratorStack, c, index);
+	delete v;
+	delete i;
+	delete edgeLenght;
 }
 
-void pearceFinishVisiting() {
-
+void pearceFinishVisiting(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
+	verticesStack->pop();
+	iteratorStack->pop();
+	PearceDirectedGraph tempGraph;
+	tempGraph = *g;
+	if (tempGraph[*v].root) {
+		(*index)--;
+		while (not(verticesStack->empty()) && tempGraph[*v].rindex <= tempGraph[verticesStack->top()].rindex) {
+			auto w = verticesStack->top();
+			verticesStack->pop();
+			tempGraph[w].rindex = *c;
+			(*index)--;
+			*g = tempGraph;
+		}
+		tempGraph[*v].rindex = *c;
+		(*c)--;
+		*g = tempGraph;
+	}
+	else {
+		verticesStack->push(*v);
+	}
 }
 
 bool pearceBeginEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i, std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, std::stack<int>* iteratorStack, int* c, int* index) {
+	/*
 	auto iterations = adjacent_vertices(*v, *g);
-	for (; iterations.first < iterations.second && *iterations.first != (size_t)*i; iterations.first++) {
-
+	(int)*iterations.first;
+	while (*iterations.first != *i && iterations.first < iterations.second) {
+		*iterations.first++; 
 	}
+	*/
+	
+	boost::graph_traits<PearceDirectedGraph>::vertex_iterator vi, vi_end, next;
+	int j = 0;
+	for (next = vi; vi != vi_end && j != *i; vi = next, j++) {
+	}
+	
+
 	PearceDirectedGraph tempGraph;
 	tempGraph = *g;
-	if (tempGraph[*iterations.first].rindex == 0) {
+	if (tempGraph[*vi].rindex == 0) {
 		iteratorStack->pop();
 		iteratorStack->push(*i + 1);
-		auto tempV = *iterations.first;
+		auto tempV = *vi;
 		pearceBeginVisiting(g, &tempV, verticesStack, iteratorStack, c, index);
+		*g = tempGraph;
 		return true;
 	}
 	else {
@@ -431,12 +506,15 @@ bool pearceBeginEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descrip
 
 void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i) {
 	PearceDirectedGraph tempGraph;
+	tempGraph = *g;
 	auto iterations = adjacent_vertices(*v, *g);
 	for (; iterations.first < iterations.second && *iterations.first != (size_t)*i; iterations.first++) {
 
 	}
-	if () {
-
+	if (tempGraph[*iterations.first].rindex<tempGraph[*v].rindex) {
+		tempGraph[*v].rindex = tempGraph[*iterations.first].rindex;
+		tempGraph[*v].root = false;
+		*g = tempGraph;
 	}
 }
 
