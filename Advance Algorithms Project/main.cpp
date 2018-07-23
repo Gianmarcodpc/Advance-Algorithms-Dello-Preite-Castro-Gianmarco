@@ -5,6 +5,7 @@
 #include <boost\random\mersenne_twister.hpp>
 #include <boost\random\uniform_int_distribution.hpp>
 #include <boost\graph\graphviz.hpp>
+#include <libs/graph/src/read_graphviz_new.cpp>
 #include <string>
 #include <stack>
 #include <set>
@@ -215,14 +216,13 @@ void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descri
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
 
-
-	DirectedGraph* g;
-	g = readDirectedGraphFromFile(5, 0);
-	delete g;
+	//DirectedGraph* g;
+	//g = readDirectedGraphFromFile(5, 0);
+	//delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
 	//imperativePearceSCC(g);
-	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	//nuutilaSCC(g);
+	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	nuutilaSCC(g);
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
 	//delete sccGraph;
@@ -246,7 +246,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 	auto g = new DirectedGraph;
 	auto vertices = new boost::adjacency_list<>::vertex_descriptor[numVertex];
 	for (int i = 0; i < numVertex; i++) {
-		vertices[i] = add_vertex(*g); //adds numVertex vertices to the graph
+		vertices[i] = add_vertex(*g);//adds numVertex vertices to the graph
 	}
 	for (int i = 0, randValue = 0; i < numVertex; i++) {
 		for (int j = 0; j < numVertex; j++) {
@@ -361,7 +361,7 @@ void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
 	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
 	std::string path = "./DirectedGraphs/" + fileName + ".txt";
 	std::ofstream writer(path);
-	boost::write_graphviz(writer, *g);
+	writer.close();
 	return;
 }
 
@@ -371,13 +371,20 @@ DirectedGraph* readDirectedGraphFromFile(int numVertex, int index) {
 	std::ifstream reader(path);
 	DirectedGraph* g = new DirectedGraph;
 	boost::dynamic_properties dp;
-	//if (boost::read_graphviz_new(path, *g, dp)) {
-		return g;
-	//}
-	//else {
-		//std::cout << "Problem Reading File" << std::endl;
-		//return g;
-	//}
+
+	if (reader) {
+		if (boost::read_graphviz(path, *g, dp)) {
+			return g;
+		}
+		else {
+			std::cout << "Problem Reading File" << std::endl;
+			return g;
+		}
+	}
+	else {
+		std::cout << "Problem Reading File" << std::endl;
+		return NULL;
+	}
 }
 
 /**
@@ -567,7 +574,6 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
 	verticesStack->push(*v);
 	verticesSet->insert(*v);
 	*g = tempGraph;
-
 	auto iterations = adjacent_vertices(*v, tempGraph);
 	//THERE IS AN ERROR HERE. DEREFERENCING ITERATOR
 	while(iterations.first != iterations.second){ // while there are nodes adjacent to the initial node v
@@ -601,7 +607,6 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
 	*g = tempGraph;
 	return;
 }
-
 
 /**
 * Imperative Version of Pearce's SCC algorithm. Based on PEA_FIND_SCC3
@@ -753,10 +758,15 @@ bool pearceBeginEdge(PearceDirectedGraph* g,
 	int* c, 
 	int* index) 
 {
-	
+	/*
+	boost::graph_traits<PearceDirectedGraph>::adjacency_iterator ai;
+	boost::graph_traits<PearceDirectedGraph>::adjacency_iterator ai_end;
+	int j = 0;
+	for (boost::tie(ai, ai_end) = adjacent_vertices(*v, *g); ai != ai_end, j != *i; ++ai, ++j){}
+	*/
 	auto iterations = adjacent_vertices(*v, *g);
 	(int)*iterations.first;
-	while (*iterations.first != *i && iterations.first < iterations.second) { //finds the vertex connected to the i-th edge of the node
+	while (iterations.first < iterations.second && *iterations.first != *i) { //finds the vertex connected to the i-th edge of the node
 		*iterations.first++; 
 	}
 	
