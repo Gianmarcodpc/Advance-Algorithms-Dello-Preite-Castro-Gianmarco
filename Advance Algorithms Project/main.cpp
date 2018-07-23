@@ -96,6 +96,11 @@ PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex);
 void saveDirectedGraphToFile(DirectedGraph* g,int numVertex, int index);
 
 /**
+* Function identifier of saveDirectedGraphToFile. Further documentation on the function code body.
+*/
+DirectedGraph* readDirectedGraphFromFile(int numVertex, int index);
+
+/**
 * Function identifier of generateAndSaveRandomGraphs. Further documentation on the function code body.
 */
 void generateAndSaveRandomGraphs(int numGraphs);
@@ -211,7 +216,9 @@ int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
 
 
-
+	DirectedGraph* g;
+	g = readDirectedGraphFromFile(5, 0);
+	delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
 	//imperativePearceSCC(g);
 	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
@@ -356,6 +363,21 @@ void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
 	std::ofstream writer(path);
 	boost::write_graphviz(writer, *g);
 	return;
+}
+
+DirectedGraph* readDirectedGraphFromFile(int numVertex, int index) {
+	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
+	std::string path = "./DirectedGraphs/" + fileName + ".txt";
+	std::ifstream reader(path);
+	DirectedGraph* g = new DirectedGraph;
+	boost::dynamic_properties dp;
+	//if (boost::read_graphviz_new(path, *g, dp)) {
+		return g;
+	//}
+	//else {
+		//std::cout << "Problem Reading File" << std::endl;
+		//return g;
+	//}
 }
 
 /**
