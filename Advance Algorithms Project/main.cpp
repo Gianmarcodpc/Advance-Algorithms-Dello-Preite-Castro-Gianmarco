@@ -226,7 +226,7 @@ int main() {
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
 	//delete sccGraph;
-	//generateAndSaveRandomGraphs(10);
+	//generateAndSaveRandomGraphs(100);
 	std::cin.get();
 	return 0;
 }
