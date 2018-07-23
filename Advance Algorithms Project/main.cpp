@@ -221,8 +221,8 @@ int main() {
 	//delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
 	//imperativePearceSCC(g);
-	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	nuutilaSCC(g);
+	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	//nuutilaSCC(g);
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
 	//delete sccGraph;
