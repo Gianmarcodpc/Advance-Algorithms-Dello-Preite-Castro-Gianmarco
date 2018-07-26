@@ -1,10 +1,10 @@
 #include <iostream>
-#include <boost\graph\adjacency_list.hpp>
-#include <boost\graph\adjacency_iterator.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/adjacency_iterator.hpp>
 #include <time.h>
-#include <boost\random\mersenne_twister.hpp>
-#include <boost\random\uniform_int_distribution.hpp>
-#include <boost\graph\graphviz.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/graph/graphviz.hpp>
 #include <libs/graph/src/read_graphviz_new.cpp>
 #include <string>
 #include <stack>
@@ -111,23 +111,18 @@ void generateAndSaveRandomGraphs(int numGraphs);
 /**
 * Function identifier of tarjanSCC. Further documentation on the function code body.
 */
-TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g);
+void tarjanSCC(TarjanDirectedGraph* g);
 
 /**
 * Function identifier of tarjanStrongConnect. Further documentation on the function code body.
 */
 void tarjanStrongConnect(boost::adjacency_list<>::vertex_descriptor* v, 
-	TarjanDirectedGraph* g, 
-	std::stack<TarjanDirectedGraph::vertex_descriptor>* points,
-	std::set<TarjanDirectedGraph::vertex_descriptor>* pointsSet,
-	int* i,
-	int* componentCounter, 
-	TarjanDirectedGraph* resultGraph);
+	TarjanDirectedGraph& g);
 
 /**
 * Function identifier of displayTarjanSCC. Further documentation on the function code body.
 */
-TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g);
+TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph* g);
 
 
 
@@ -140,11 +135,7 @@ void nuutilaSCC(NuutilaDirectedGraph* g);
 * Function identifier of nuutilaVisit. Further documentation on the function code body.
 */
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
-	NuutilaDirectedGraph* g, 
-	int* counter, 
-	std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet);
-
+	NuutilaDirectedGraph& g);
 
 
 /**
@@ -208,6 +199,14 @@ bool pearceBeginEdge(PearceDirectedGraph* g,
 void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i);
 
 
+int nuutilaCounter;
+std::stack<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesStack; //stack as in the pseudo-code
+std::set<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesSet; // auxiliary set, used for checking if an element is inside the stack
+
+std::stack<TarjanDirectedGraph::vertex_descriptor> tarjanPointsStack; //same stack used in the pesudo-code
+std::set<TarjanDirectedGraph::vertex_descriptor> tarjanPointsSet; //auxiliary set, used for checking if an element is inside the stack
+int tarjanI; // same i used in the pseudo-code
+int tarjanComponentsCount; // counts how many Strongly Connected Components there are in the Graph, used for the generation of the final graph.
 
 
 /**
@@ -223,9 +222,8 @@ int main() {
 	//imperativePearceSCC(g);
 	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
 	//nuutilaSCC(g);
-	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
-	//TarjanDirectedGraph* sccGraph = displayTarjanSCC(g);
-	//delete sccGraph;
+	TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
+	TarjanDirectedGraph sccGraph = displayTarjanSCC(g);
 	//generateAndSaveRandomGraphs(100);
 	std::cin.get();
 	return 0;
@@ -268,7 +266,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 */
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(1);
+	boost::random::mt19937 gen(time(NULL));
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -299,7 +297,7 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 */
 NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(1);
+	boost::random::mt19937 gen(time(NULL));
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -416,51 +414,42 @@ void generateAndSaveRandomGraphs(int numGraphs) {
 /**
 * Builds a new Graph based on the result of the Tarjan SCC algorithm result.
 */
-TarjanDirectedGraph* displayTarjanSCC(TarjanDirectedGraph* g) {
-	TarjanDirectedGraph* resultGraph = tarjanSCC(g);
-	TarjanDirectedGraph tempGraph;
-	tempGraph = *resultGraph;
-	for (auto iterations = boost::edges(*g); iterations.first != iterations.second; iterations.first++) {
-		if (tempGraph[source(*iterations.first, *g)].component == tempGraph[target(*iterations.first, *g)].component) {
-			auto e = boost::add_edge(source(*iterations.first, *g), target(*iterations.first, *g), *g);
+TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph* g) {
+	tarjanSCC(g);
+	TarjanDirectedGraph resultGraph(num_vertices(*g));
+
+	auto iterations = boost::edges(*g);
+	auto It = iterations.first;
+	for (; It != iterations.second; It++) {
+		if ((*g)[source(*It, *g)].component == (*g)[target(*It, *g)].component) {
+			auto e = boost::add_edge(source(*iterations.first, resultGraph), target(*iterations.first, resultGraph), *g);
 		}
 	}
-	*resultGraph = tempGraph;
 	return resultGraph;
 }
 
 /**
 * Tarjan's SCC algorithm
 */
-TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g) {
-	auto i = new int; // same i used in the pseudo-code
-	*i = 0;
-	auto componentCounter = new int; // counts how many Strongly Connected Components there are in the Graph, used for the generation of the final graph.
-	*componentCounter = 0;
+void tarjanSCC(TarjanDirectedGraph* g) {
+
 	auto v = new TarjanDirectedGraph::vertex_descriptor;
 	*v = *boost::vertices(*g).first; //starting point of the algorithm, the first vertex in the graph
-	auto points = new std::stack<TarjanDirectedGraph::vertex_descriptor>; //same stack used in the pesudo-code
-	auto pointsSet = new std::set<TarjanDirectedGraph::vertex_descriptor>; //auxiliary set, used for checking if an element is inside the stack
-	auto resultGraph = new TarjanDirectedGraph;
-	tarjanStrongConnect(v, g, points, pointsSet, i, componentCounter, resultGraph);
-	*i = 0;
+	tarjanStrongConnect(v, *g);
+	tarjanI = 0;
 	auto iterations = boost::vertices(*g);
 	for(TarjanDirectedGraph g2 = *g; iterations.first < iterations.second; iterations.first++){
 		if (g2[*iterations.first].number == -1) {
-			*g = g2;
 			TarjanDirectedGraph::vertex_descriptor v = *iterations.first;
-			tarjanStrongConnect(&v, g, points, pointsSet, i, componentCounter, resultGraph);
+			tarjanStrongConnect(&v, *g);
 		}
 	}
+
 	/*
 	 * memory deallocation
 	 */
-	delete i;
-	delete componentCounter;
+	
 	delete v;
-	delete points;
-	delete pointsSet;
-	return resultGraph;
 
 }
 
@@ -470,53 +459,47 @@ TarjanDirectedGraph* tarjanSCC(TarjanDirectedGraph* g) {
 * input: a vertex, the graph, the stack, the auxiliary set, i, the component counter and the final result graph.
 */
 void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, 
-	TarjanDirectedGraph* g, 
-	std::stack<TarjanDirectedGraph::vertex_descriptor>* points, 
-	std::set<TarjanDirectedGraph::vertex_descriptor>* pointsSet, 
-	int* i,
-	int* componentCounter, 
-	TarjanDirectedGraph* resultGraph) {
-	TarjanDirectedGraph tempGraph = *g; //temporary auxiliary graph
-	tempGraph[*v].lowpt = (*i); //initialization as in the pseudo-code
-	tempGraph[*v].lowvine = (*i); //initialization as in the pseudo-code
-	tempGraph[*v].number = (*i); //initialization as in the pseudo-code
-	(*i)++;
-	*g = tempGraph;
-	points->push(*v);
-	pointsSet->insert(*v);
-	TarjanDirectedGraph::vertex_descriptor top;
+	TarjanDirectedGraph& g) {
+	
+	g[*v].lowpt = (tarjanI); //initialization as in the pseudo-code
+	g[*v].lowvine = (tarjanI); //initialization as in the pseudo-code
+	g[*v].number = (tarjanI); //initialization as in the pseudo-code
+	tarjanI++;
+	tarjanPointsStack.push(*v);
+	tarjanPointsSet.insert(*v);
 
-	for (auto iterations = adjacent_vertices(*v, *g); iterations.first < iterations.second; iterations.first++) {
-		if (tempGraph[*iterations.first].number == -1) { // *iterations.first = w in the pseudo-code
-			TarjanDirectedGraph::vertex_descriptor v2 = *iterations.first;
-			tarjanStrongConnect(&v2, g, points, pointsSet, i, componentCounter, resultGraph);
-			tempGraph[*v].lowpt = std::min(tempGraph[*v].lowpt, tempGraph[*iterations.first].lowpt);
-			tempGraph[*v].lowvine = std::min(tempGraph[*v].lowvine, tempGraph[*iterations.first].lowvine);
-			*g = tempGraph;
+	auto iterations = adjacent_vertices(*v, g);
+	auto It = iterations.first;
+
+	for (; It < iterations.second; It++) {
+		if (g[*It].number == -1) { // *It = w in the pseudo-code
+			TarjanDirectedGraph::vertex_descriptor v2 = *It;
+			tarjanStrongConnect(&v2, g);
+			g[*v].lowpt = std::min(g[*v].lowpt, g[*It].lowpt);
+			g[*v].lowvine = std::min(g[*v].lowvine, g[*It].lowvine);
 		}
 		// ELSE IF FOR ANCESTOR
 
-		else if (tempGraph[*iterations.first].number<tempGraph[*v].number) {  // *iterations.first = w in the pseudo-code
-			if (pointsSet->find(*iterations.first) == pointsSet->end()) {
-				tempGraph[*v].lowvine = std::min(tempGraph[*v].lowvine, tempGraph[*iterations.first].number);
-				*g = tempGraph;
+		else if (g[*It].number<g[*v].number) {  // *It = w in the pseudo-code
+			if (tarjanPointsSet.find(*It) != tarjanPointsSet.end()) {
+				g[*v].lowvine = std::min(g[*v].lowvine, g[*It].number);
 			}
 
 		}
 	}
-	if ((tempGraph[*v].lowpt == tempGraph[*v].number)&&(tempGraph[*v].lowvine == tempGraph[*v].number)) {
-		(*componentCounter)++;
-		top = points->top();
-		while (tempGraph[top].number>= tempGraph[*v].number) {
+	if ((g[*v].lowpt == g[*v].number) && (g[*v].lowvine == g[*v].number)) {
+		tarjanComponentsCount++;
+
+		std::cout << tarjanPointsStack.top() << "    " << g[tarjanPointsStack.top()].number << std::endl;
+		std::cout << tarjanPointsStack.empty() << std::endl;
+
+		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[*v].number) {
 			//SOMETHING WRONG
-			resultGraph->added_vertex(top);
-			TarjanDirectedGraph tempGraph2 = *resultGraph;
-			tempGraph2[top].component = *componentCounter;
-			*resultGraph = tempGraph2;
-			pointsSet->erase(top);
-			points->pop();
-			top = points->top();
+			g[tarjanPointsStack.top()].component = tarjanComponentsCount;
+			tarjanPointsSet.erase(tarjanPointsStack.top());
+			tarjanPointsStack.pop();
 		}
+		
 	}
 	
 }
@@ -526,29 +509,13 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v,
 * Nuutila's SCC algorithm
 */
 void nuutilaSCC(NuutilaDirectedGraph* g) {
-	
-	auto counter = new int; // counter for counting the number of nodes visited, in order to keep track of the visit order.
-	*counter = 0;
 
-	auto verticesStack = new std::stack<NuutilaDirectedGraph::vertex_descriptor>; //stack as in the pseudo-code
-	auto verticesSet = new std::set<NuutilaDirectedGraph::vertex_descriptor>; // auxiliary set, used for checking if an element is inside the stack
-	
-	NuutilaDirectedGraph fakeGraph; // fake graph and vertex, used to add a node to the stack with visit index = 0;
-	auto fakeVertex = add_vertex(fakeGraph);
-	fakeGraph[fakeVertex].visitIndex = 0;
-	verticesStack->push(fakeVertex);
-	verticesSet->insert(fakeVertex);
-	
+	std::cout << "vertices" << num_vertices(*g) << std::endl;
+	nuutilaCounter = 0;
 	for (auto iterations = boost::vertices(*g); iterations.first < iterations.second; iterations.first++) { // main loop of the algorithm
 		NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
-		nuutilaVisit(&tempV, g, counter, verticesStack, verticesSet);
-	}
-
-	//memory deallocation
-	delete counter;
-	delete verticesStack;
-	delete verticesSet;
-
+		nuutilaVisit(&tempV, *g);
+	}	
 	return;
 }
 
@@ -558,53 +525,53 @@ void nuutilaSCC(NuutilaDirectedGraph* g) {
 * implementation follows rigorously the pseudo-code
 */
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
-	NuutilaDirectedGraph* g, 
-	int* counter, 
-	std::stack<NuutilaDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::set<NuutilaDirectedGraph::vertex_descriptor>* verticesSet) 
+	NuutilaDirectedGraph& g)
 {
-	
-	NuutilaDirectedGraph tempGraph = *g; // temporary auxiliary graph
-	tempGraph[*v].root = *v; // initialization as in the pseudo-code
-	tempGraph[*v].inComponent = false; // initialization as in the pseudo-code
-	tempGraph[*v].visited = true; // sets visited to true, to indicate the vertex has been visisted
-	tempGraph[*v].visitIndex = *counter; //sets the order of visist basedx on the counter
-	(*counter)++;
 
-	verticesStack->push(*v);
-	verticesSet->insert(*v);
-	*g = tempGraph;
-	auto iterations = adjacent_vertices(*v, tempGraph);
-	//THERE IS AN ERROR HERE. DEREFERENCING ITERATOR
-	while(iterations.first != iterations.second){ // while there are nodes adjacent to the initial node v
-		if (tempGraph[*iterations.first].visited == false) { //visit them if they haven't been visited
-			NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
-			nuutilaVisit(&tempV, &tempGraph, counter, verticesStack, verticesSet); // *g instead of tempGraph?
+	g[*v].root = *v; // initialization as in the pseudo-code
+	g[*v].inComponent = false; // initialization as in the pseudo-code
+	g[*v].visited = true; // sets visited to true, to indicate the vertex has been visisted
+	g[*v].visitIndex = nuutilaCounter; //sets the order of visist based on the counter
+	nuutilaCounter++;
+
+
+	auto iterations = adjacent_vertices(*v, g);
+	auto It = iterations.first;
+
+	//deque iterator not derefernciable
+	while (It != iterations.second) { // while there are nodes adjacent to the initial node v
+		if (g[*It].visited == false) { //visit them if they haven't been visited
+			NuutilaDirectedGraph::vertex_descriptor tempV = *It;
+			nuutilaVisit(&tempV, g);
 		}
-		//auto tempV2 = tempGraph[*iterations.first].root;
-		if (!tempGraph[tempGraph[*iterations.first].root].inComponent) { // not inComponent[root[v]]
-			tempGraph[*v].root = std::min(tempGraph[*v].visitIndex, tempGraph[*iterations.first].visitIndex);
+		if (!g[g[*It].root].inComponent) { // not inComponent[root[v]]
+			g[g[*v].root].visitIndex = std::min(g[g[*v].root].visitIndex, g[g[*It].root].visitIndex);
 		}
-		if (tempGraph[*v].root == *v) { // root[v] == v
-			if (tempGraph[verticesStack->top()].visitIndex>tempGraph[*v].visitIndex) {
-				while (tempGraph[verticesStack->top()].visitIndex >= tempGraph[*v].visitIndex) {
-					auto w = verticesStack->top();
-					verticesSet->erase(w);
-					verticesStack->pop();
-					tempGraph[w].inComponent = true;
-				}
-			}
-			else {
-				tempGraph[*v].inComponent = true;
-			}
-		}
-		else if(verticesSet->find(tempGraph[*v].root) == verticesSet->end()){ // root[v] is not on the stack
-			verticesStack->push(tempGraph[*v].root);
-			verticesSet->insert(tempGraph[*v].root);
-		}
-		iterations.first++;
+		It++;
 	}
-	*g = tempGraph;
+	assert(g[*v].root<5);
+	if (g[*v].root == *v) { // root[v] == v
+		if (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex>g[*v].visitIndex) {
+			assert(!nuutilaVerticesStack.empty());
+			while (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex < g[*v].visitIndex) {
+				auto w = nuutilaVerticesStack.top();
+				nuutilaVerticesSet.erase(w);
+				assert(!nuutilaVerticesStack.empty());
+				nuutilaVerticesStack.pop();
+				g[w].inComponent = true;
+			}
+		}
+		else {
+			g[*v].inComponent = true;
+		}
+	}
+	else if (nuutilaVerticesSet.find(g[*v].root) == nuutilaVerticesSet.end()) { // root[v] is not on the stack
+		assert(g[*v].root<5);
+		nuutilaVerticesStack.push(g[*v].root);
+		nuutilaVerticesSet.insert(g[*v].root);
+	}
+	
+	std::cout << nuutilaVerticesStack.top() << std::endl;
 	return;
 }
 
