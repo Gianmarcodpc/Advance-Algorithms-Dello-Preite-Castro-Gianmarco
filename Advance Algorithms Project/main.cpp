@@ -202,10 +202,10 @@ int main() {
 	//imperativePearceSCC(*g);
 	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
 	//nuutilaSCC(*g);
-	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
-	//TarjanDirectedGraph sccGraph = displayTarjanSCC(*g);
+	TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
+	TarjanDirectedGraph sccGraph = displayTarjanSCC(*g);
 	//std::cout << tarjanComponentsCount << std::endl;
-	generateAndSaveRandomGraphs(100);
+	//generateAndSaveRandomGraphs(100);
 	std::cin.get();
 	return 0;
 }
@@ -247,7 +247,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 */
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(4);
+	boost::random::mt19937 gen(3);
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -408,7 +408,8 @@ TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph& g) {
 
 	auto iterations = boost::edges(g);
 	auto It = iterations.first;
-	for (; It != iterations.second; It++) {
+	auto ItEnd = iterations.second;
+	for (; It != ItEnd; It++) {
 		if ((g)[source(*It, g)].component == (g)[target(*It, g)].component) {
 			auto e = boost::add_edge(source(*iterations.first, resultGraph), target(*iterations.first, resultGraph), g);
 		}
@@ -425,9 +426,11 @@ void tarjanSCC(TarjanDirectedGraph& g) {
 	tarjanStrongConnect(v, g);
 	tarjanI = 0;
 	auto iterations = boost::vertices(g);
-	for(TarjanDirectedGraph g2 = g; iterations.first < iterations.second; iterations.first++){
-		if (g2[*iterations.first].number == -1) {
-			TarjanDirectedGraph::vertex_descriptor v = *iterations.first;
+	auto It = iterations.first;
+	auto ItEnd = iterations.second;
+	for (; It < ItEnd; It++) {
+		if (g[*It].number == -1) {
+			TarjanDirectedGraph::vertex_descriptor v = *It;
 			tarjanStrongConnect(v, g);
 		}
 	}
@@ -450,27 +453,30 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v,
 	tarjanPointsStack.push(v);
 	tarjanPointsSet.insert(v);
 
-	auto iterations = adjacent_vertices(v, g);
+	auto iterations = boost::out_edges(v, g);
 	auto It = iterations.first;
+	auto ItEnd = iterations.second;
 
-	for (; It < iterations.second; It++) {
-		if (g[*It].number == -1) { // *It = w in the pseudo-code
-			TarjanDirectedGraph::vertex_descriptor v2 = *It;
-			tarjanStrongConnect(v2, g);
-			g[v].lowpt = std::min(g[v].lowpt, g[*It].lowpt);
-			g[v].lowvine = std::min(g[v].lowvine, g[*It].lowvine);
+	for (; It < ItEnd; It++) {
+		auto tgt = boost::target(*It, g);
+		if (g[tgt].number == -1) { // tgt = w in the pseudo-code
+			tarjanStrongConnect(tgt, g);
+			g[v].lowpt = std::min(g[v].lowpt, g[tgt].lowpt);
+			g[v].lowvine = std::min(g[v].lowvine, g[tgt].lowvine);
 		}
 		// ELSE IF FOR ANCESTOR
 
-		else if (g[*It].number<g[v].number) {  // *It = w in the pseudo-code
-			if (tarjanPointsSet.find(*It) != tarjanPointsSet.end()) {
-				g[v].lowvine = std::min(g[v].lowvine, g[*It].number);
+		else if (g[tgt].number<g[v].number) {  // tgt = w in the pseudo-code
+			if (tarjanPointsSet.find(tgt) != tarjanPointsSet.end()) {
+				g[v].lowvine = std::min(g[v].lowvine, g[tgt].number);
 			}
 
 		}
 	}
 	if ((g[v].lowpt == g[v].number) && (g[v].lowvine == g[v].number)) {
+
 		tarjanComponentsCount++;
+
 
 		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[v].number) {
 			//SOMETHING WRONG vector iterator not incrementable
@@ -490,7 +496,7 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v,
 */
 void nuutilaSCC(NuutilaDirectedGraph& g) {
 
-	std::cout << "vertices" << num_vertices(g) << std::endl;
+
 	nuutilaCounter = 0;
 	for (auto iterations = boost::vertices(g); iterations.first < iterations.second; iterations.first++) { // main loop of the algorithm
 		NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
@@ -515,17 +521,17 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 	nuutilaCounter++;
 
 
-	auto iterations = adjacent_vertices(v, g);
+	auto iterations = boost::out_edges(v, g);
 	auto It = iterations.first;
+	auto ItEnd = iterations.second;
 
-	//SOMETHING WRONG HERE deque iterator not derefernciable
-	while (It != iterations.second) { // while there are nodes adjacent to the initial node v
-		if (g[*It].visited == false) { //visit them if they haven't been visited
-			NuutilaDirectedGraph::vertex_descriptor tempV = *It;
-			nuutilaVisit(tempV, g);
+	while (It != ItEnd) { // while there are nodes adjacent to the initial node v
+		auto tgt = boost::target(*It, g);
+		if (g[tgt].visited == false) { //visit them if they haven't been visited
+			nuutilaVisit(tgt, g);
 		}
-		if (!g[g[*It].root].inComponent) { // not inComponent[root[v]]
-			g[g[v].root].visitIndex = std::min(g[g[v].root].visitIndex, g[g[*It].root].visitIndex);
+		if (!g[g[tgt].root].inComponent) { // not inComponent[root[v]]
+			g[g[v].root].visitIndex = std::min(g[g[v].root].visitIndex, g[g[tgt].root].visitIndex);
 		}
 		It++;
 	}
@@ -551,7 +557,6 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 		nuutilaVerticesSet.insert(g[v].root);
 	}
 	
-	std::cout << nuutilaVerticesStack.top() << std::endl;
 	return;
 }
 
@@ -568,7 +573,8 @@ void imperativePearceSCC(PearceDirectedGraph& g) {
 
 	auto iterations = boost::vertices(g);
 	auto It = iterations.first;
-	for (; It < iterations.second; It++) {
+	auto ItEnd = iterations.second;
+	for (; It < ItEnd; It++) {
 		assert(It < iterations.second);
 		g[*It].rindex = 0;
 	}
@@ -579,7 +585,8 @@ void imperativePearceSCC(PearceDirectedGraph& g) {
 
 	auto iterations2 = boost::vertices(g);
 	auto It2 = iterations2.first;
-	for (; It2 < iterations2.second; It2++) { // main loop of the algorithm
+	auto ItEnd2 = iterations.second;
+	for (; It2 < ItEnd2; It2++){ // main loop of the algorithm
 		assert(It2 < iterations2.second);
 		if (g[*It2].rindex == 0) {
 			PearceDirectedGraph::vertex_descriptor tempV = *It2;
@@ -689,19 +696,19 @@ bool pearceBeginEdge(PearceDirectedGraph& g,
 {
 
 	//SOMETHING WRONG HERE vector iterator not dereferenciable
-	auto iterations = adjacent_vertices(v, g);
+	auto iterations = boost::out_edges(v, g);
 	auto It = iterations.first;
-	while (It < iterations.second && *It != i) { //finds the vertex connected to the i-th edge of the node
-		assert(It < iterations.second);
+	auto ItEnd = iterations.second;
+	while (It < ItEnd && boost::target(*It, g) != i) { //finds the vertex connected to the i-th edge of the node
+		assert(It < ItEnd);
 		It++; 
 	}
-	
-	if (g[*It].rindex == 0) { // *It is w in the pseudo-code
+	auto tgt = boost::target(*It, g);
+	if (g[tgt].rindex == 0) { // tgt is w in the pseudo-code
 		assert(!pearceIteratorStack.empty());
 		pearceIteratorStack.pop();
 		pearceIteratorStack.push(i + 1);
-		auto tempV = *It;
-		pearceBeginVisiting(g, tempV);
+		pearceBeginVisiting(g, tgt);
 		return true;
 	}
 	else {
@@ -717,14 +724,16 @@ bool pearceBeginEdge(PearceDirectedGraph& g,
 void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descriptor& v, int i) 
 {
 
-	auto iterations = adjacent_vertices(v, g);
+	auto iterations = boost::out_edges(v, g);
 	auto It = iterations.first;
-	while (*It != i && It < iterations.second) { //finds the vertex connected to the i-th edge of the node
-		assert(It < iterations.second);
+	auto ItEnd = iterations.second;
+	while (It < ItEnd && boost::target(*It, g) != i) { //finds the vertex connected to the i-th edge of the node
+		assert(It < ItEnd);
 		It++;
 	}
-	if (g[*It].rindex<g[v].rindex) { // *iterations.first is w in the pseudocode.
-		g[v].rindex = g[*It].rindex;
+	auto tgt = boost::target(*It, g);
+	if (g[tgt].rindex<g[v].rindex) { // *iterations.first is w in the pseudocode.
+		g[v].rindex = g[tgt].rindex;
 		g[v].root = false;
 	}
 }
