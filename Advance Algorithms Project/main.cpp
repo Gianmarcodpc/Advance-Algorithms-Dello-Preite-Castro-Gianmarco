@@ -111,92 +111,72 @@ void generateAndSaveRandomGraphs(int numGraphs);
 /**
 * Function identifier of tarjanSCC. Further documentation on the function code body.
 */
-void tarjanSCC(TarjanDirectedGraph* g);
+void tarjanSCC(TarjanDirectedGraph& g);
 
 /**
 * Function identifier of tarjanStrongConnect. Further documentation on the function code body.
 */
-void tarjanStrongConnect(boost::adjacency_list<>::vertex_descriptor* v, 
+void tarjanStrongConnect(boost::adjacency_list<>::vertex_descriptor& v, 
 	TarjanDirectedGraph& g);
 
 /**
 * Function identifier of displayTarjanSCC. Further documentation on the function code body.
 */
-TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph* g);
+TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph& g);
 
 
 
 /**
 * Function identifier of nuutilaSCC. Further documentation on the function code body.
 */
-void nuutilaSCC(NuutilaDirectedGraph* g);
+void nuutilaSCC(NuutilaDirectedGraph& g);
 
 /**
 * Function identifier of nuutilaVisit. Further documentation on the function code body.
 */
-void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
+void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 	NuutilaDirectedGraph& g);
 
 
 /**
 * Function identifier of imperativePearceSCC. Further documentation on the function code body.
 */
-void imperativePearceSCC(PearceDirectedGraph* g);
+void imperativePearceSCC(PearceDirectedGraph& g);
 
 /**
 * Function identifier of pearceVisit. Further documentation on the function code body.
 */
-void pearceVisit(PearceDirectedGraph* g, 
-	PearceDirectedGraph::vertex_descriptor* v, 
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::stack<int>* iteratorStack, 
-	int* c, 
-	int* index);
+void pearceVisit(PearceDirectedGraph& g, 
+	PearceDirectedGraph::vertex_descriptor& v);
 
 /**
 * Function identifier of pearceBeginVisiting. Further documentation on the function code body.
 */
-void pearceBeginVisiting(PearceDirectedGraph* g,
-	PearceDirectedGraph::vertex_descriptor* v, 
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::stack<int>* iteratorStack, 
-	int* c, 
-	int* index);
+void pearceBeginVisiting(PearceDirectedGraph& g,
+	PearceDirectedGraph::vertex_descriptor& v);
 
 /**
 * Function identifier of pearceVisitLoop. Further documentation on the function code body.
 */
-void pearceVisitLoop(PearceDirectedGraph* g,
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack,
-	std::stack<int>* iteratorStack,
-	int* c, 
-	int* index);
+void pearceVisitLoop(PearceDirectedGraph& g);
 
 /**
 * Function identifier of pearceFinishVisiting. Further documentation on the function code body.
 */
-void pearceFinishVisiting(PearceDirectedGraph* g,
-	PearceDirectedGraph::vertex_descriptor* v,
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack,
-	std::stack<int>* iteratorStack,
-	int* c,
-	int* index);
+void pearceFinishVisiting(PearceDirectedGraph& g,
+	PearceDirectedGraph::vertex_descriptor& v);
 
 /**
 * Function identifier of pearceBeginEdge. Further documentation on the function code body.
 */
-bool pearceBeginEdge(PearceDirectedGraph* g,
-	PearceDirectedGraph::vertex_descriptor* v,
-	int* i, 
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack,
-	std::stack<int>* iteratorStack, 
-	int* c, 
-	int* index);
+bool pearceBeginEdge(PearceDirectedGraph& g,
+	PearceDirectedGraph::vertex_descriptor& v,
+	int i);
 
 /**
 * Function identifier of pearceFinishEdge. Further documentation on the function code body.
 */
-void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i);
+void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descriptor& v, int i);
 
 
 int nuutilaCounter;
@@ -219,11 +199,11 @@ int main() {
 	//g = readDirectedGraphFromFile(5, 0);
 	//delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
-	//imperativePearceSCC(g);
-	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	//nuutilaSCC(g);
-	TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
-	TarjanDirectedGraph sccGraph = displayTarjanSCC(g);
+	//imperativePearceSCC(*g);
+	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	nuutilaSCC(*g);
+	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
+	//TarjanDirectedGraph sccGraph = displayTarjanSCC(*g);
 	//generateAndSaveRandomGraphs(100);
 	std::cin.get();
 	return 0;
@@ -414,15 +394,15 @@ void generateAndSaveRandomGraphs(int numGraphs) {
 /**
 * Builds a new Graph based on the result of the Tarjan SCC algorithm result.
 */
-TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph* g) {
+TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph& g) {
 	tarjanSCC(g);
-	TarjanDirectedGraph resultGraph(num_vertices(*g));
+	TarjanDirectedGraph resultGraph(num_vertices(g));
 
-	auto iterations = boost::edges(*g);
+	auto iterations = boost::edges(g);
 	auto It = iterations.first;
 	for (; It != iterations.second; It++) {
-		if ((*g)[source(*It, *g)].component == (*g)[target(*It, *g)].component) {
-			auto e = boost::add_edge(source(*iterations.first, resultGraph), target(*iterations.first, resultGraph), *g);
+		if ((g)[source(*It, g)].component == (g)[target(*It, g)].component) {
+			auto e = boost::add_edge(source(*iterations.first, resultGraph), target(*iterations.first, resultGraph), g);
 		}
 	}
 	return resultGraph;
@@ -431,25 +411,19 @@ TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph* g) {
 /**
 * Tarjan's SCC algorithm
 */
-void tarjanSCC(TarjanDirectedGraph* g) {
+void tarjanSCC(TarjanDirectedGraph& g) {
 
-	auto v = new TarjanDirectedGraph::vertex_descriptor;
-	*v = *boost::vertices(*g).first; //starting point of the algorithm, the first vertex in the graph
-	tarjanStrongConnect(v, *g);
+	auto v = *boost::vertices(g).first; //starting point of the algorithm, the first vertex in the graph
+	tarjanStrongConnect(v, g);
 	tarjanI = 0;
-	auto iterations = boost::vertices(*g);
-	for(TarjanDirectedGraph g2 = *g; iterations.first < iterations.second; iterations.first++){
+	auto iterations = boost::vertices(g);
+	for(TarjanDirectedGraph g2 = g; iterations.first < iterations.second; iterations.first++){
 		if (g2[*iterations.first].number == -1) {
 			TarjanDirectedGraph::vertex_descriptor v = *iterations.first;
-			tarjanStrongConnect(&v, *g);
+			tarjanStrongConnect(v, g);
 		}
 	}
 
-	/*
-	 * memory deallocation
-	 */
-	
-	delete v;
 
 }
 
@@ -458,42 +432,42 @@ void tarjanSCC(TarjanDirectedGraph* g) {
 * implementation follows rigorously the pseudo-code
 * input: a vertex, the graph, the stack, the auxiliary set, i, the component counter and the final result graph.
 */
-void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v, 
+void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v, 
 	TarjanDirectedGraph& g) {
 	
-	g[*v].lowpt = (tarjanI); //initialization as in the pseudo-code
-	g[*v].lowvine = (tarjanI); //initialization as in the pseudo-code
-	g[*v].number = (tarjanI); //initialization as in the pseudo-code
+	g[v].lowpt = (tarjanI); //initialization as in the pseudo-code
+	g[v].lowvine = (tarjanI); //initialization as in the pseudo-code
+	g[v].number = (tarjanI); //initialization as in the pseudo-code
 	tarjanI++;
-	tarjanPointsStack.push(*v);
-	tarjanPointsSet.insert(*v);
+	tarjanPointsStack.push(v);
+	tarjanPointsSet.insert(v);
 
-	auto iterations = adjacent_vertices(*v, g);
+	auto iterations = adjacent_vertices(v, g);
 	auto It = iterations.first;
 
 	for (; It < iterations.second; It++) {
 		if (g[*It].number == -1) { // *It = w in the pseudo-code
 			TarjanDirectedGraph::vertex_descriptor v2 = *It;
-			tarjanStrongConnect(&v2, g);
-			g[*v].lowpt = std::min(g[*v].lowpt, g[*It].lowpt);
-			g[*v].lowvine = std::min(g[*v].lowvine, g[*It].lowvine);
+			tarjanStrongConnect(v2, g);
+			g[v].lowpt = std::min(g[v].lowpt, g[*It].lowpt);
+			g[v].lowvine = std::min(g[v].lowvine, g[*It].lowvine);
 		}
 		// ELSE IF FOR ANCESTOR
 
-		else if (g[*It].number<g[*v].number) {  // *It = w in the pseudo-code
+		else if (g[*It].number<g[v].number) {  // *It = w in the pseudo-code
 			if (tarjanPointsSet.find(*It) != tarjanPointsSet.end()) {
-				g[*v].lowvine = std::min(g[*v].lowvine, g[*It].number);
+				g[v].lowvine = std::min(g[v].lowvine, g[*It].number);
 			}
 
 		}
 	}
-	if ((g[*v].lowpt == g[*v].number) && (g[*v].lowvine == g[*v].number)) {
+	if ((g[v].lowpt == g[v].number) && (g[v].lowvine == g[v].number)) {
 		tarjanComponentsCount++;
 
 		std::cout << tarjanPointsStack.top() << "    " << g[tarjanPointsStack.top()].number << std::endl;
 		std::cout << tarjanPointsStack.empty() << std::endl;
 
-		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[*v].number) {
+		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[v].number) {
 			//SOMETHING WRONG
 			g[tarjanPointsStack.top()].component = tarjanComponentsCount;
 			tarjanPointsSet.erase(tarjanPointsStack.top());
@@ -508,13 +482,13 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor* v,
 /**
 * Nuutila's SCC algorithm
 */
-void nuutilaSCC(NuutilaDirectedGraph* g) {
+void nuutilaSCC(NuutilaDirectedGraph& g) {
 
-	std::cout << "vertices" << num_vertices(*g) << std::endl;
+	std::cout << "vertices" << num_vertices(g) << std::endl;
 	nuutilaCounter = 0;
-	for (auto iterations = boost::vertices(*g); iterations.first < iterations.second; iterations.first++) { // main loop of the algorithm
+	for (auto iterations = boost::vertices(g); iterations.first < iterations.second; iterations.first++) { // main loop of the algorithm
 		NuutilaDirectedGraph::vertex_descriptor tempV = *iterations.first;
-		nuutilaVisit(&tempV, *g);
+		nuutilaVisit(tempV, g);
 	}	
 	return;
 }
@@ -524,36 +498,36 @@ void nuutilaSCC(NuutilaDirectedGraph* g) {
 * input: the vertex, the graph, the counter, the vertices Stack and the auxiliary vertices Set
 * implementation follows rigorously the pseudo-code
 */
-void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
+void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 	NuutilaDirectedGraph& g)
 {
 
-	g[*v].root = *v; // initialization as in the pseudo-code
-	g[*v].inComponent = false; // initialization as in the pseudo-code
-	g[*v].visited = true; // sets visited to true, to indicate the vertex has been visisted
-	g[*v].visitIndex = nuutilaCounter; //sets the order of visist based on the counter
+	g[v].root = v; // initialization as in the pseudo-code
+	g[v].inComponent = false; // initialization as in the pseudo-code
+	g[v].visited = true; // sets visited to true, to indicate the vertex has been visisted
+	g[v].visitIndex = nuutilaCounter; //sets the order of visist based on the counter
 	nuutilaCounter++;
 
 
-	auto iterations = adjacent_vertices(*v, g);
+	auto iterations = adjacent_vertices(v, g);
 	auto It = iterations.first;
 
 	//deque iterator not derefernciable
 	while (It != iterations.second) { // while there are nodes adjacent to the initial node v
 		if (g[*It].visited == false) { //visit them if they haven't been visited
 			NuutilaDirectedGraph::vertex_descriptor tempV = *It;
-			nuutilaVisit(&tempV, g);
+			nuutilaVisit(tempV, g);
 		}
 		if (!g[g[*It].root].inComponent) { // not inComponent[root[v]]
-			g[g[*v].root].visitIndex = std::min(g[g[*v].root].visitIndex, g[g[*It].root].visitIndex);
+			g[g[v].root].visitIndex = std::min(g[g[v].root].visitIndex, g[g[*It].root].visitIndex);
 		}
 		It++;
 	}
-	assert(g[*v].root<5);
-	if (g[*v].root == *v) { // root[v] == v
-		if (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex>g[*v].visitIndex) {
+	assert(g[v].root<5);
+	if (g[v].root == v) { // root[v] == v
+		if (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex>g[v].visitIndex) {
 			assert(!nuutilaVerticesStack.empty());
-			while (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex < g[*v].visitIndex) {
+			while (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex < g[v].visitIndex) {
 				auto w = nuutilaVerticesStack.top();
 				nuutilaVerticesSet.erase(w);
 				assert(!nuutilaVerticesStack.empty());
@@ -562,43 +536,50 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor* v,
 			}
 		}
 		else {
-			g[*v].inComponent = true;
+			g[v].inComponent = true;
 		}
 	}
-	else if (nuutilaVerticesSet.find(g[*v].root) == nuutilaVerticesSet.end()) { // root[v] is not on the stack
-		assert(g[*v].root<5);
-		nuutilaVerticesStack.push(g[*v].root);
-		nuutilaVerticesSet.insert(g[*v].root);
+	else if (nuutilaVerticesSet.find(g[v].root) == nuutilaVerticesSet.end()) { // root[v] is not on the stack
+		assert(g[v].root<5);
+		nuutilaVerticesStack.push(g[v].root);
+		nuutilaVerticesSet.insert(g[v].root);
 	}
 	
 	std::cout << nuutilaVerticesStack.top() << std::endl;
 	return;
 }
 
+std::stack<PearceDirectedGraph::vertex_descriptor> pearceVerticesStack; //vS same as pseudo-code
+std::stack<int> pearceIteratorStack; //iS same as pseudo-code
+int pearceC; // c same as pseudo-code
+int pearceIndex; //index same as pseudo-code
+
 /**
 * Imperative Version of Pearce's SCC algorithm. Based on PEA_FIND_SCC3
 * implementation follows rigorously the pseudo-code
 */
-void imperativePearceSCC(PearceDirectedGraph* g) {
-	
-	auto verticesStack = new std::stack<PearceDirectedGraph::vertex_descriptor>; //vS same as pseudo-code
-	auto iteratorStack = new std::stack<int>; //iS same as pseudo-code
-	auto c = new int; // c same as pseudo-code
-	auto index = new int; //index same as pseudo-code
+void imperativePearceSCC(PearceDirectedGraph& g) {
 
-	*c = num_vertices(*g) - 1; // c initialization
-	*index = 1; // index initialization
-
-	for (auto iterations = boost::vertices(*g); iterations.first < iterations.second; iterations.first++) { // main loop of the algorithm
-		PearceDirectedGraph::vertex_descriptor tempV = *iterations.first;
-		pearceVisit(g, &tempV,verticesStack,iteratorStack,c,index);
+	auto iterations = boost::vertices(g);
+	auto It = iterations.first;
+	for (; It < iterations.second; It++) {
+		assert(It < iterations.second);
+		g[*It].rindex = 0;
 	}
+	pearceVerticesStack = {}; // verticesStack initialization
+	pearceIteratorStack = {}; // iteratorStack initialization
+	pearceIndex = 1; // index initialization
+	pearceC = num_vertices(g) - 1; // c initialization
 
-	//memory deallocation
-	delete verticesStack;
-	delete iteratorStack;
-	delete c;
-	delete index;
+	auto iterations2 = boost::vertices(g);
+	auto It2 = iterations2.first;
+	for (; It2 < iterations2.second; It2++) { // main loop of the algorithm
+		assert(It2 < iterations2.second);
+		if (g[*It2].rindex == 0) {
+			PearceDirectedGraph::vertex_descriptor tempV = *It2;
+			pearceVisit(g, tempV);
+		}
+	}
 }
 
 /**
@@ -606,16 +587,13 @@ void imperativePearceSCC(PearceDirectedGraph* g) {
 * input: the graph, the vertex, the vertices stack, the iterator stack, the int c, and the int index
 * implementation follows rigorously the pseudo-code
 */
-void pearceVisit(PearceDirectedGraph* g,
-	PearceDirectedGraph::vertex_descriptor* v,
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::stack<int>* iteratorStack,
-	int* c,
-	int* index) 
+void pearceVisit(PearceDirectedGraph& g,
+	PearceDirectedGraph::vertex_descriptor& v) 
 {
-	pearceBeginVisiting(g, v, verticesStack, iteratorStack,c,index);
-	while (!verticesStack->empty()) {
-		pearceVisitLoop(g, verticesStack, iteratorStack, c, index);
+	pearceBeginVisiting(g, v);
+	while (!pearceVerticesStack.empty()) {
+		assert(!pearceVerticesStack.empty());
+		pearceVisitLoop(g);
 	}
 }
 
@@ -624,22 +602,15 @@ void pearceVisit(PearceDirectedGraph* g,
 * input: the graph, the vertex, the vertices stack, the iterator stack, the int c, and the int index
 * implementation follows rigorously the pseudo-code
 */
-void pearceBeginVisiting(PearceDirectedGraph* g, 
-	PearceDirectedGraph::vertex_descriptor* v, 
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::stack<int>* iteratorStack,
-	int* c, 
-	int* index) 
+void pearceBeginVisiting(PearceDirectedGraph& g, 
+	PearceDirectedGraph::vertex_descriptor& v) 
 {
-	verticesStack->push(*v);
-	iteratorStack->push(0);
+	pearceVerticesStack.push(v);
+	pearceIteratorStack.push(0);
 
-	PearceDirectedGraph tempGraph; // temporary auxiliary graph
-	tempGraph = *g;
-	tempGraph[*v].root = true;
-	tempGraph[*v].rindex = *index;
-	(*index)++;
-	*g = tempGraph;
+	g[v].root = true;
+	g[v].rindex = pearceIndex;
+	pearceIndex++;
 
 }
 
@@ -647,35 +618,28 @@ void pearceBeginVisiting(PearceDirectedGraph* g,
 * input: the graph, the vertices stack, the iterator stack, the int c, and the int index
 * implementation follows rigorously the pseudo-code
 */
-void pearceVisitLoop(PearceDirectedGraph* g,
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack,
-	std::stack<int>* iteratorStack, 
-	int* c, 
-	int* index)
+void pearceVisitLoop(PearceDirectedGraph& g)
 {
-	auto v = new PearceDirectedGraph::vertex_descriptor;
-	auto i = new int;
-	*v = verticesStack->top();
-	*i = iteratorStack->top();
-	auto edgeLenght = new int;
-	*edgeLenght = out_degree(*v, *g); // number of edges leaving the vertex
-	while (*i <= *edgeLenght) { 
-		if (*i > 0) {
-			int j = *i - 1; // temporary variable
-			pearceFinishEdge(g, v, &j);
+
+	assert(!pearceVerticesStack.empty());
+	auto v = pearceVerticesStack.top();
+	assert(!pearceIteratorStack.empty());
+	auto i = pearceIteratorStack.top();
+
+
+	auto edgeLenght = out_degree(v, g); // number of edges leaving the vertex
+	while (i <= edgeLenght) { 
+		if (i > 0) {
+			pearceFinishEdge(g, v, i);
 		}
-		if (*i < *edgeLenght && pearceBeginEdge(g, v, i, verticesStack, iteratorStack, c, index)) {
+		if (i < edgeLenght && pearceBeginEdge(g, v, i)) {
 			return;
 		}
-		(*i)++;
+		i++;
 	}
 
-	pearceFinishVisiting(g, v, verticesStack, iteratorStack, c, index);
+	pearceFinishVisiting(g, v);
 	
-	// memory deallocation
-	delete v;
-	delete i;
-	delete edgeLenght;
 }
 
 /**
@@ -683,32 +647,28 @@ void pearceVisitLoop(PearceDirectedGraph* g,
 * input: the graph, the vertex, the vertices stack, the iterator stack, the int c, and the int index
 * implementation follows rigorously the pseudo-code
 */
-void pearceFinishVisiting(PearceDirectedGraph* g,
-	PearceDirectedGraph::vertex_descriptor* v,
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::stack<int>* iteratorStack, 
-	int* c, 
-	int* index) 
+void pearceFinishVisiting(PearceDirectedGraph& g,
+	PearceDirectedGraph::vertex_descriptor& v) 
 {
-	verticesStack->pop();
-	iteratorStack->pop();
-	PearceDirectedGraph tempGraph; // temporary auxiliary graph
-	tempGraph = *g;
-	if (tempGraph[*v].root) { // root is true
-		(*index)--;
-		while (not(verticesStack->empty()) && tempGraph[*v].rindex <= tempGraph[verticesStack->top()].rindex) { //stack not empty and rindex[v] <= rindex[top(vS)]
-			auto w = verticesStack->top(); // w in the pseudo-code
-			verticesStack->pop();
-			tempGraph[w].rindex = *c;
-			(*index)--;
-			*g = tempGraph;
+	assert(!pearceVerticesStack.empty());
+	pearceVerticesStack.pop();
+	assert(!pearceIteratorStack.empty());
+	pearceIteratorStack.pop();
+
+	if (g[v].root) { // root is true
+		pearceIndex--;
+		while (!pearceVerticesStack.empty() && g[v].rindex <= g[pearceVerticesStack.top()].rindex) { //stack not empty and rindex[v] <= rindex[top(vS)]
+			assert(!pearceVerticesStack.empty());
+			auto w = pearceVerticesStack.top(); // w in the pseudo-code
+			pearceVerticesStack.pop();
+			g[w].rindex = pearceC;
+			pearceIndex--;
 		}
-		tempGraph[*v].rindex = *c;
-		(*c)--;
-		*g = tempGraph;
+		g[v].rindex = pearceC;
+		pearceC--;
 	}
 	else {
-		verticesStack->push(*v);
+		pearceVerticesStack.push(v);
 	}
 }
 
@@ -717,42 +677,24 @@ void pearceFinishVisiting(PearceDirectedGraph* g,
 * input: the graph, the vertex, the index of the current outgoing edge i, the vertices stack, the iterator stack, the int c, and the int index
 * implementation follows rigorously the pseudo-code
 */
-bool pearceBeginEdge(PearceDirectedGraph* g, 
-	PearceDirectedGraph::vertex_descriptor* v,
-	int* i, 
-	std::stack<PearceDirectedGraph::vertex_descriptor>* verticesStack, 
-	std::stack<int>* iteratorStack, 
-	int* c, 
-	int* index) 
+bool pearceBeginEdge(PearceDirectedGraph& g, 
+	PearceDirectedGraph::vertex_descriptor& v,
+	int i) 
 {
-	/*
-	boost::graph_traits<PearceDirectedGraph>::adjacency_iterator ai;
-	boost::graph_traits<PearceDirectedGraph>::adjacency_iterator ai_end;
-	int j = 0;
-	for (boost::tie(ai, ai_end) = adjacent_vertices(*v, *g); ai != ai_end, j != *i; ++ai, ++j){}
-	*/
-	auto iterations = adjacent_vertices(*v, *g);
-	(int)*iterations.first;
-	while (iterations.first < iterations.second && *iterations.first != *i) { //finds the vertex connected to the i-th edge of the node
-		*iterations.first++; 
-	}
-	
-	/*
-	boost::graph_traits<PearceDirectedGraph>::vertex_iterator vi, vi_end, next;
-	int j = 0;
-	for (next = vi; vi != vi_end && j != *i; vi = next, j++) { //finds the vertex connected to the i-th edge of the node
-	}
-	*/
-	
 
-	PearceDirectedGraph tempGraph;
-	tempGraph = *g;
-	if (tempGraph[*iterations.first].rindex == 0) { // *iterations.first is w in the pseudo-code
-		iteratorStack->pop();
-		iteratorStack->push(*i + 1);
-		auto tempV = *iterations.first;
-		pearceBeginVisiting(g, &tempV, verticesStack, iteratorStack, c, index);
-		*g = tempGraph;
+	auto iterations = adjacent_vertices(v, g);
+	auto It = iterations.first;
+	while (It < iterations.second && *It != i) { //finds the vertex connected to the i-th edge of the node
+		assert(It < iterations.second);
+		It++; 
+	}
+	
+	if (g[*It].rindex == 0) { // *It is w in the pseudo-code
+		assert(!pearceIteratorStack.empty());
+		pearceIteratorStack.pop();
+		pearceIteratorStack.push(i + 1);
+		auto tempV = *It;
+		pearceBeginVisiting(g, tempV);
 		return true;
 	}
 	else {
@@ -765,20 +707,18 @@ bool pearceBeginEdge(PearceDirectedGraph* g,
 * input: the graph, the vertex, the index of the current outgoing edge i
 * implementation follows rigorously the pseudo-code
 */
-void pearceFinishEdge(PearceDirectedGraph* g, PearceDirectedGraph::vertex_descriptor* v, int* i) 
+void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descriptor& v, int i) 
 {
-	PearceDirectedGraph tempGraph; // temporary auxiliary graph
-	tempGraph = *g;
 
-	auto iterations = adjacent_vertices(*v, *g);
-	(int)*iterations.first;
-	while (*iterations.first != *i && iterations.first < iterations.second) { //finds the vertex connected to the i-th edge of the node
-		*iterations.first++;
+	auto iterations = adjacent_vertices(v, g);
+	auto It = iterations.first;
+	while (*It != i && It < iterations.second) { //finds the vertex connected to the i-th edge of the node
+		assert(It < iterations.second);
+		It++;
 	}
-	if (tempGraph[*iterations.first].rindex<tempGraph[*v].rindex) { // *iterations.first is w in the pseudocode.
-		tempGraph[*v].rindex = tempGraph[*iterations.first].rindex;
-		tempGraph[*v].root = false;
-		*g = tempGraph;
+	if (g[*It].rindex<g[v].rindex) { // *iterations.first is w in the pseudocode.
+		g[v].rindex = g[*It].rindex;
+		g[v].root = false;
 	}
 }
 
