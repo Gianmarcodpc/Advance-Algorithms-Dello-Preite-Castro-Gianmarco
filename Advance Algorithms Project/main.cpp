@@ -200,11 +200,12 @@ int main() {
 	//delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
 	//imperativePearceSCC(*g);
-	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	nuutilaSCC(*g);
+	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	//nuutilaSCC(*g);
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//TarjanDirectedGraph sccGraph = displayTarjanSCC(*g);
-	//generateAndSaveRandomGraphs(100);
+	//std::cout << tarjanComponentsCount << std::endl;
+	generateAndSaveRandomGraphs(100);
 	std::cin.get();
 	return 0;
 }
@@ -246,7 +247,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 */
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(time(NULL));
+	boost::random::mt19937 gen(4);
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -263,6 +264,12 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 			}
 		}
 	}
+
+	std::string fileName = "Working Tarjan Directed Graph 1";
+	std::string path = "./TarjanDirectedGraphs/" + fileName + ".txt";
+	std::ofstream writer(path);
+	boost::write_graphviz(writer, *g);
+	writer.close();
 
 	delete[] vertices;
 	return g;
@@ -339,6 +346,7 @@ void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
 	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
 	std::string path = "./DirectedGraphs/" + fileName + ".txt";
 	std::ofstream writer(path);
+	boost::write_graphviz(writer, *g);
 	writer.close();
 	return;
 }
@@ -464,11 +472,9 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v,
 	if ((g[v].lowpt == g[v].number) && (g[v].lowvine == g[v].number)) {
 		tarjanComponentsCount++;
 
-		std::cout << tarjanPointsStack.top() << "    " << g[tarjanPointsStack.top()].number << std::endl;
-		std::cout << tarjanPointsStack.empty() << std::endl;
-
 		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[v].number) {
-			//SOMETHING WRONG
+			//SOMETHING WRONG vector iterator not incrementable
+			assert(!tarjanPointsStack.empty());
 			g[tarjanPointsStack.top()].component = tarjanComponentsCount;
 			tarjanPointsSet.erase(tarjanPointsStack.top());
 			tarjanPointsStack.pop();
@@ -512,7 +518,7 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 	auto iterations = adjacent_vertices(v, g);
 	auto It = iterations.first;
 
-	//deque iterator not derefernciable
+	//SOMETHING WRONG HERE deque iterator not derefernciable
 	while (It != iterations.second) { // while there are nodes adjacent to the initial node v
 		if (g[*It].visited == false) { //visit them if they haven't been visited
 			NuutilaDirectedGraph::vertex_descriptor tempV = *It;
@@ -682,6 +688,7 @@ bool pearceBeginEdge(PearceDirectedGraph& g,
 	int i) 
 {
 
+	//SOMETHING WRONG HERE vector iterator not dereferenciable
 	auto iterations = adjacent_vertices(v, g);
 	auto It = iterations.first;
 	while (It < iterations.second && *It != i) { //finds the vertex connected to the i-th edge of the node
