@@ -91,22 +91,6 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex);
 */
 PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex);
 
-/**
-* Function identifier of saveDirectedGraphToFile. Further documentation on the function code body.
-*/
-void saveDirectedGraphToFile(DirectedGraph* g,int numVertex, int index);
-
-/**
-* Function identifier of saveDirectedGraphToFile. Further documentation on the function code body.
-*/
-DirectedGraph* readDirectedGraphFromFile(int numVertex, int index);
-
-/**
-* Function identifier of generateAndSaveRandomGraphs. Further documentation on the function code body.
-*/
-void generateAndSaveRandomGraphs(int numGraphs);
-
-
 
 /**
 * Function identifier of tarjanSCC. Further documentation on the function code body.
@@ -174,19 +158,73 @@ bool pearceBeginEdge(PearceDirectedGraph& g,
 void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descriptor& v, int i);
 
 
-int nuutilaCounter;
-int nuutilaComponentsCount = 0;
-std::stack<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesStack; //stack as in the pseudo-code
-std::set<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesSet; // auxiliary set, used for checking if an element is inside the stack
 
-std::stack<TarjanDirectedGraph::vertex_descriptor> tarjanPointsStack; //same stack used in the pesudo-code
+/*
+ * Tarjan's Stack, same as in the pseudo-code
+ */
+std::stack<TarjanDirectedGraph::vertex_descriptor> tarjanPointsStack;
+
+/*
+ * Auxiliary set for Tarjan's algorithm, used for checking if an element is inside the stack
+ */
 std::set<TarjanDirectedGraph::vertex_descriptor> tarjanPointsSet; //auxiliary set, used for checking if an element is inside the stack
-int tarjanI; // same i used in the pseudo-code
-int tarjanComponentsCount; // counts how many Strongly Connected Components there are in the Graph, used for the generation of the final graph.
+
+/*
+ * Same i as used in Tarjan's pseudo-code
+ */
+int tarjanI;
+
+/*
+ * counts how many Strongly Connected Components there are in the Graph using Tarjan's algorithm
+ */
+int tarjanComponentsCount;
+
+
+/*
+* Counter used for storing the visit order of nodes in Nuutila's algorithm
+*/
+int nuutilaCounter;
+
+/*
+* Counts the number of non-trivial components of Nuutila's algorithm
+*/
+int nuutilaComponentsCount = 0;
+
+/*
+* Nuutila's stack, as in the pseudo-code
+*/
+std::stack<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesStack;
+
+/*
+* Auxiliary set for Nuutila's algorithm, used for checking if an element is inside the stack
+*/
+std::set<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesSet;
+
+
+
+/*
+* Pearce vertices stack, same as vS in the pseudo-code
+*/
+std::stack<PearceDirectedGraph::vertex_descriptor> pearceVerticesStack;
+
+/*
+ * Pearce Iterator stack, same as iS in the pseudo-code
+ */
+std::stack<int> pearceIteratorStack;
+
+/*
+ * Pearce's algorithm int c
+ */
+int pearceC; // c same as pseudo-code
+
+/*
+ * Pearce's algorithm int index
+ */
+int pearceIndex; //index same as pseudo-code
 
 
 /**
- * Simple main function that only calls the creation of a graph, saving of a graph to file, and one of the algorithms.
+ * Simple main function that only calls the creation of a graph and one of the algorithms.
  */
 int main() {
 	std::cout << "Advanced Algorithms Project" << std::endl;
@@ -196,13 +234,12 @@ int main() {
 	//delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
 	//imperativePearceSCC(*g);
-	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(10);
-	nuutilaSCC(*g);
-	std::cout << nuutilaComponentsCount << std::endl;
+	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
+	//nuutilaSCC(*g);
+	//std::cout << nuutilaComponentsCount << std::endl;
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//tarjanSCC(*g);
 	//std::cout << tarjanComponentsCount << std::endl;
-	//generateAndSaveRandomGraphs(100);
 	std::cin.get();
 	return 0;
 }
@@ -227,7 +264,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 	for (int i = 0, randValue = 0; i < numVertex; i++) {
 		for (int j = 0; j < numVertex; j++) {
 			randValue = dist(gen); //random value for the edge
-			if (randValue >= treshold) { 
+			if (randValue >= treshold && i != j) {
 				auto e = boost::add_edge(i, j, *g); //adds edge if the value is greater than the treshold
 			}
 		}
@@ -237,7 +274,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 }
 
 /**
-* Creates a random Tarjan Directed Graph with exactly numVertex vertices.
+* Creates a random Tarjan Directed Graph with exactly numVertex vertices, and saves it to file
 * Uses an uniform distribution in the range 1 to 10000.
 * First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
 * and if the random value is greater than the treshold, the edge is added to the graph.
@@ -262,7 +299,7 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 		}
 	}
 
-	std::string fileName = "Working Tarjan Directed Graph 1";
+	std::string fileName = "Tarjan Directed Graph";
 	std::string path = "./TarjanDirectedGraphs/" + fileName + ".txt";
 	std::ofstream writer(path);
 	boost::write_graphviz(writer, *g);
@@ -274,7 +311,7 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 }
 
 /**
-* Creates a random Nuutila DIrected Graph with exactly numVertex vertices.
+* Creates a random Nuutila DIrected Graph with exactly numVertex vertices, and saves it to file
 * Uses an uniform distribution in the range 1 to 10000.
 * First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
 * and if the random value is greater than the treshold, the edge is added to the graph.
@@ -299,7 +336,7 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 		}
 	}
 
-	std::string fileName = "Working Nuutila Directed Graph 1";
+	std::string fileName = "Nuutila Directed Graph";
 	std::string path = "./NuutilaDirectedGraphs/" + fileName + ".txt";
 	std::ofstream writer(path);
 	boost::write_graphviz(writer, *g);
@@ -311,7 +348,7 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 }
 
 /**
-* Creates a random Pearce Directed Graph with exactly numVertex vertices.
+* Creates a random Pearce Directed Graph with exactly numVertex vertices, and saves it to file
 * Uses an uniform distribution in the range 1 to 10000.
 * First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
 * and if the random value is greater than the treshold, the edge is added to the graph.
@@ -336,7 +373,7 @@ PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
 		}
 	}
 
-	std::string fileName = "Working Pearce Directed Graph 1";
+	std::string fileName = "Pearce Directed Graph";
 	std::string path = "./PearceDirectedGraphs/" + fileName + ".txt";
 	std::ofstream writer(path);
 	boost::write_graphviz(writer, *g);
@@ -346,69 +383,6 @@ PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
 	return g;
 
 }
-
-/**
-* Saves a Directed Graph into a file, naming it DirectedGraph, followed by the number of vertices, and then an id.
-*/
-void saveDirectedGraphToFile(DirectedGraph* g, int numVertex, int index) {
-
-	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
-	std::string path = "./DirectedGraphs/" + fileName + ".txt";
-	std::ofstream writer(path);
-	boost::write_graphviz(writer, *g);
-	writer.close();
-	return;
-}
-
-DirectedGraph* readDirectedGraphFromFile(int numVertex, int index) {
-	std::string fileName = "DirectedGraph" + std::to_string(numVertex) + "Vertexes" + std::to_string(index);
-	std::string path = "./DirectedGraphs/" + fileName + ".txt";
-	std::ifstream reader(path);
-	DirectedGraph* g = new DirectedGraph;
-	boost::dynamic_properties dp;
-
-	if (reader) {
-		if (boost::read_graphviz(path, *g, dp)) {
-			return g;
-		}
-		else {
-			std::cout << "Problem Reading File" << std::endl;
-			return g;
-		}
-	}
-	else {
-		std::cout << "Problem Reading File" << std::endl;
-		return NULL;
-	}
-}
-
-/**
-* Generates numGraphs random graphs and saves all of them to file.
-* A fourth of numGraph graphs are generated with 5, 10, 20 and 50 vertexes
-*/
-void generateAndSaveRandomGraphs(int numGraphs) {
-	int numVertex = 5;
-	DirectedGraph* g;
-	for (int i = 0; i < 4; i++) {
-		switch (i) {
-		case 1: numVertex = 10;
-			break;
-		case 2: numVertex = 20;
-			break;
-		case 3: numVertex = 50;
-			break;
-		}
-		for (int j = 0; j < numGraphs / 4; j++) {
-			g = createRandomDirectedGraph(numVertex);
-			saveDirectedGraphToFile(g, numVertex, j);
-			delete g;
-		}
-	}
-
-}
-
-
-
 
 /**
 * Tarjan's SCC algorithm
@@ -434,7 +408,7 @@ void tarjanSCC(TarjanDirectedGraph& g) {
 /**
 * Tarjan's STRONGCONNECT procedure.
 * implementation follows rigorously the pseudo-code
-* input: a vertex, the graph, the stack, the auxiliary set, i, the component counter and the final result graph.
+* input: a vertex and the graph
 */
 void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v, 
 	TarjanDirectedGraph& g) {
@@ -500,7 +474,7 @@ void nuutilaSCC(NuutilaDirectedGraph& g) {
 
 /**
 * Nuutila's VISIT2 procedure
-* input: the vertex, the graph, the counter, the vertices Stack and the auxiliary vertices Set
+* input: a vertex and the graph
 * implementation follows rigorously the pseudo-code
 */
 void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
@@ -561,10 +535,6 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 	return;
 }
 
-std::stack<PearceDirectedGraph::vertex_descriptor> pearceVerticesStack; //vS same as pseudo-code
-std::stack<int> pearceIteratorStack; //iS same as pseudo-code
-int pearceC; // c same as pseudo-code
-int pearceIndex; //index same as pseudo-code
 
 /**
 * Imperative Version of Pearce's SCC algorithm. Based on PEA_FIND_SCC3
@@ -598,7 +568,7 @@ void imperativePearceSCC(PearceDirectedGraph& g) {
 
 /**
 * VISIT procedure
-* input: the graph, the vertex, the vertices stack, the iterator stack, the int c, and the int index
+* input: the graph and a vertex
 * implementation follows rigorously the pseudo-code
 */
 void pearceVisit(PearceDirectedGraph& g,
@@ -613,7 +583,7 @@ void pearceVisit(PearceDirectedGraph& g,
 
 /** 
 * BEGINVISIT procedure
-* input: the graph, the vertex, the vertices stack, the iterator stack, the int c, and the int index
+* input: the graph and a vertex
 * implementation follows rigorously the pseudo-code
 */
 void pearceBeginVisiting(PearceDirectedGraph& g, 
@@ -629,7 +599,7 @@ void pearceBeginVisiting(PearceDirectedGraph& g,
 }
 
 /**
-* input: the graph, the vertices stack, the iterator stack, the int c, and the int index
+* input: the graph
 * implementation follows rigorously the pseudo-code
 */
 void pearceVisitLoop(PearceDirectedGraph& g)
@@ -658,7 +628,7 @@ void pearceVisitLoop(PearceDirectedGraph& g)
 
 /**
 * FINISHVISITING procedure
-* input: the graph, the vertex, the vertices stack, the iterator stack, the int c, and the int index
+* input: the graph and a vertex
 * implementation follows rigorously the pseudo-code
 */
 void pearceFinishVisiting(PearceDirectedGraph& g,
@@ -688,7 +658,7 @@ void pearceFinishVisiting(PearceDirectedGraph& g,
 
 /**
 * BEGINEDGE procedure
-* input: the graph, the vertex, the index of the current outgoing edge i, the vertices stack, the iterator stack, the int c, and the int index
+* input: the graph, a vertex and the index of the current outgoing edge i
 * implementation follows rigorously the pseudo-code
 */
 bool pearceBeginEdge(PearceDirectedGraph& g, 
@@ -720,7 +690,7 @@ bool pearceBeginEdge(PearceDirectedGraph& g,
 
 /**
 * FINISHEDGE procedure
-* input: the graph, the vertex, the index of the current outgoing edge i
+* input: the graph, a vertex and the index of the current outgoing edge i
 * implementation follows rigorously the pseudo-code
 */
 void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descriptor& v, int i) 
