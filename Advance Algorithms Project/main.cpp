@@ -245,7 +245,7 @@ int main() {
 }
 
 /**
-* Creates a random Directed Graph with exactly numVertex vertices.
+* Creates a random Directed Graph with exactly numVertex vertices, and saves it to file
 * Uses an uniform distribution in the range 1 to 10000.
 * First, a treshold is set. Then for every possible pair of vertices (including self loops) a new random value is calculated,
 * and if the random value is greater than the treshold, the edge is added to the graph.
@@ -269,6 +269,13 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 			}
 		}
 	}
+
+	std::string fileName = "Directed Graph";
+	std::string path = "./DirectedGraphs/" + fileName + ".txt";
+	std::ofstream writer(path);
+	boost::write_graphviz(writer, *g);
+	writer.close();
+
 	delete[] vertices;
 	return g;
 }
