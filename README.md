@@ -3,7 +3,7 @@
 Advanced Algorithms Project.
 By: Dello Preite Castro Gianmarco, Polimi ID 10483930, Polimi matricola 905131
 
-Tarjan's Algorithm is working as intended, the final output is stored in the 'tarjanComponentsCount' golbal variable.
+Tarjan's Algorithm is working as intended, the final output is stored in the 'tarjanComponentsCount' global variable.
 
 Nuutila's Algorithm is working as intended, the final output is stored in the 'nuutilaComponentsCount' global variable.
 
