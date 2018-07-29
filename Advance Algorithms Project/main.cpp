@@ -119,11 +119,6 @@ void tarjanSCC(TarjanDirectedGraph& g);
 void tarjanStrongConnect(boost::adjacency_list<>::vertex_descriptor& v, 
 	TarjanDirectedGraph& g);
 
-/**
-* Function identifier of displayTarjanSCC. Further documentation on the function code body.
-*/
-TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph& g);
-
 
 
 /**
@@ -198,12 +193,12 @@ int main() {
 	//DirectedGraph* g;
 	//g = readDirectedGraphFromFile(5, 0);
 	//delete g;
-	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
-	//imperativePearceSCC(*g);
+	PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
+	imperativePearceSCC(*g);
 	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
 	//nuutilaSCC(*g);
-	TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
-	TarjanDirectedGraph sccGraph = displayTarjanSCC(*g);
+	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
+	//tarjanSCC(*g);
 	//std::cout << tarjanComponentsCount << std::endl;
 	//generateAndSaveRandomGraphs(100);
 	std::cin.get();
@@ -247,7 +242,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 */
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(3);
+	boost::random::mt19937 gen(time(NULL));
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -259,7 +254,7 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 	for (int i = 0, randValue = 0; i < numVertex; i++) {
 		for (int j = 0; j < numVertex; j++) {
 			randValue = dist(gen);
-			if (randValue >= treshold) {
+			if (randValue >= treshold && i != j) {
 				auto e = boost::add_edge(i, j, *g);
 			}
 		}
@@ -296,11 +291,17 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 	for (int i = 0, randValue = 0; i < numVertex; i++) {
 		for (int j = 0; j < numVertex; j++) {
 			randValue = dist(gen);
-			if (randValue >= treshold) {
+			if (randValue >= treshold && i != j) {
 				auto e = boost::add_edge(i, j, *g);
 			}
 		}
 	}
+
+	std::string fileName = "Working Nuutila Directed Graph 1";
+	std::string path = "./NuutilaDirectedGraphs/" + fileName + ".txt";
+	std::ofstream writer(path);
+	boost::write_graphviz(writer, *g);
+	writer.close();
 
 	delete[] vertices;
 	return g;
@@ -315,7 +316,7 @@ NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 */ 
 PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(1);
+	boost::random::mt19937 gen(time(NULL));
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -327,11 +328,17 @@ PearceDirectedGraph* createRandomPearceDirectedGraph(int numVertex) {
 	for (int i = 0, randValue = 0; i < numVertex; i++) {
 		for (int j = 0; j < numVertex; j++) {
 			randValue = dist(gen);
-			if (randValue >= treshold) {
+			if (randValue >= treshold && i != j) {
 				auto e = boost::add_edge(i, j, *g);
 			}
 		}
 	}
+
+	std::string fileName = "Working Pearce Directed Graph 1";
+	std::string path = "./PearceDirectedGraphs/" + fileName + ".txt";
+	std::ofstream writer(path);
+	boost::write_graphviz(writer, *g);
+	writer.close();
 
 	delete[] vertices;
 	return g;
@@ -399,30 +406,14 @@ void generateAndSaveRandomGraphs(int numGraphs) {
 }
 
 
-/**
-* Builds a new Graph based on the result of the Tarjan SCC algorithm result.
-*/
-TarjanDirectedGraph displayTarjanSCC(TarjanDirectedGraph& g) {
-	tarjanSCC(g);
-	TarjanDirectedGraph resultGraph(num_vertices(g));
 
-	auto iterations = boost::edges(g);
-	auto It = iterations.first;
-	auto ItEnd = iterations.second;
-	for (; It != ItEnd; It++) {
-		if ((g)[source(*It, g)].component == (g)[target(*It, g)].component) {
-			auto e = boost::add_edge(source(*iterations.first, resultGraph), target(*iterations.first, resultGraph), g);
-		}
-	}
-	return resultGraph;
-}
 
 /**
 * Tarjan's SCC algorithm
 */
 void tarjanSCC(TarjanDirectedGraph& g) {
 
-	auto v = *boost::vertices(g).first; //starting point of the algorithm, the first vertex in the graph
+	auto v = *(boost::vertices(g).first); //starting point of the algorithm, the first vertex in the graph
 	tarjanStrongConnect(v, g);
 	tarjanI = 0;
 	auto iterations = boost::vertices(g);
@@ -476,14 +467,15 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v,
 	if ((g[v].lowpt == g[v].number) && (g[v].lowvine == g[v].number)) {
 
 		tarjanComponentsCount++;
-
-
+		
+		
 		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[v].number) {
 			//SOMETHING WRONG vector iterator not incrementable
 			assert(!tarjanPointsStack.empty());
-			g[tarjanPointsStack.top()].component = tarjanComponentsCount;
-			tarjanPointsSet.erase(tarjanPointsStack.top());
+			auto top = tarjanPointsStack.top();
+			tarjanPointsSet.erase(top);
 			tarjanPointsStack.pop();
+			g[top].component = tarjanComponentsCount;
 		}
 		
 	}
@@ -537,15 +529,15 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 	}
 	assert(g[v].root<5);
 	if (g[v].root == v) { // root[v] == v
-		if (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex>g[v].visitIndex) {
+		if (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex>=g[v].visitIndex) {
 			assert(!nuutilaVerticesStack.empty());
-			while (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex < g[v].visitIndex) {
+			do {
 				auto w = nuutilaVerticesStack.top();
 				nuutilaVerticesSet.erase(w);
 				assert(!nuutilaVerticesStack.empty());
 				nuutilaVerticesStack.pop();
 				g[w].inComponent = true;
-			}
+			} while (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex < g[v].visitIndex);
 		}
 		else {
 			g[v].inComponent = true;
@@ -575,7 +567,7 @@ void imperativePearceSCC(PearceDirectedGraph& g) {
 	auto It = iterations.first;
 	auto ItEnd = iterations.second;
 	for (; It < ItEnd; It++) {
-		assert(It < iterations.second);
+		assert(It < ItEnd);
 		g[*It].rindex = 0;
 	}
 	pearceVerticesStack = {}; // verticesStack initialization
@@ -585,9 +577,9 @@ void imperativePearceSCC(PearceDirectedGraph& g) {
 
 	auto iterations2 = boost::vertices(g);
 	auto It2 = iterations2.first;
-	auto ItEnd2 = iterations.second;
+	auto ItEnd2 = iterations2.second;
 	for (; It2 < ItEnd2; It2++){ // main loop of the algorithm
-		assert(It2 < iterations2.second);
+		assert(It2 < ItEnd2);
 		if (g[*It2].rindex == 0) {
 			PearceDirectedGraph::vertex_descriptor tempV = *It2;
 			pearceVisit(g, tempV);
@@ -643,7 +635,7 @@ void pearceVisitLoop(PearceDirectedGraph& g)
 	auto edgeLenght = out_degree(v, g); // number of edges leaving the vertex
 	while (i <= edgeLenght) { 
 		if (i > 0) {
-			pearceFinishEdge(g, v, i);
+			pearceFinishEdge(g, v, i-1);
 		}
 		if (i < edgeLenght && pearceBeginEdge(g, v, i)) {
 			return;
@@ -695,13 +687,14 @@ bool pearceBeginEdge(PearceDirectedGraph& g,
 	int i) 
 {
 
-	//SOMETHING WRONG HERE vector iterator not dereferenciable
 	auto iterations = boost::out_edges(v, g);
 	auto It = iterations.first;
 	auto ItEnd = iterations.second;
-	while (It < ItEnd && boost::target(*It, g) != i) { //finds the vertex connected to the i-th edge of the node
+	int j = 0;
+	while (It != ItEnd && j != i) { //finds the vertex connected to the i-th edge of the node
 		assert(It < ItEnd);
 		It++; 
+		j++;
 	}
 	auto tgt = boost::target(*It, g);
 	if (g[tgt].rindex == 0) { // tgt is w in the pseudo-code
@@ -727,9 +720,11 @@ void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descri
 	auto iterations = boost::out_edges(v, g);
 	auto It = iterations.first;
 	auto ItEnd = iterations.second;
-	while (It < ItEnd && boost::target(*It, g) != i) { //finds the vertex connected to the i-th edge of the node
+	int j = 0;
+	while (It < ItEnd && j != i) { //finds the vertex connected to the i-th edge of the node
 		assert(It < ItEnd);
 		It++;
+		j++;
 	}
 	auto tgt = boost::target(*It, g);
 	if (g[tgt].rindex<g[v].rindex) { // *iterations.first is w in the pseudocode.
