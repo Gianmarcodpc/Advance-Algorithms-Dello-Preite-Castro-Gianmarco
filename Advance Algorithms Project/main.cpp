@@ -175,6 +175,7 @@ void pearceFinishEdge(PearceDirectedGraph& g, PearceDirectedGraph::vertex_descri
 
 
 int nuutilaCounter;
+int nuutilaComponentsCount = 0;
 std::stack<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesStack; //stack as in the pseudo-code
 std::set<NuutilaDirectedGraph::vertex_descriptor> nuutilaVerticesSet; // auxiliary set, used for checking if an element is inside the stack
 
@@ -193,10 +194,11 @@ int main() {
 	//DirectedGraph* g;
 	//g = readDirectedGraphFromFile(5, 0);
 	//delete g;
-	PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
-	imperativePearceSCC(*g);
-	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	//nuutilaSCC(*g);
+	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
+	//imperativePearceSCC(*g);
+	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(10);
+	nuutilaSCC(*g);
+	std::cout << nuutilaComponentsCount << std::endl;
 	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
 	//tarjanSCC(*g);
 	//std::cout << tarjanComponentsCount << std::endl;
@@ -470,7 +472,6 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v,
 		
 		
 		while (!tarjanPointsStack.empty() && g[tarjanPointsStack.top()].number >= g[v].number) {
-			//SOMETHING WRONG vector iterator not incrementable
 			assert(!tarjanPointsStack.empty());
 			auto top = tarjanPointsStack.top();
 			tarjanPointsSet.erase(top);
@@ -523,14 +524,22 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 			nuutilaVisit(tgt, g);
 		}
 		if (!g[g[tgt].root].inComponent) { // not inComponent[root[v]]
-			g[g[v].root].visitIndex = std::min(g[g[v].root].visitIndex, g[g[tgt].root].visitIndex);
+			auto index = std::min(g[g[v].root].visitIndex, g[g[tgt].root].visitIndex);
+			if (index == g[g[v].root].visitIndex) {
+				g[v].root = g[v].root;
+
+			}
+			else if (index == g[g[tgt].root].visitIndex) {
+				g[v].root = g[tgt].root;
+			}
 		}
 		It++;
 	}
-	assert(g[v].root<5);
 	if (g[v].root == v) { // root[v] == v
+		
 		if (!nuutilaVerticesStack.empty() && g[nuutilaVerticesStack.top()].visitIndex>=g[v].visitIndex) {
 			assert(!nuutilaVerticesStack.empty());
+			nuutilaComponentsCount++;
 			do {
 				auto w = nuutilaVerticesStack.top();
 				nuutilaVerticesSet.erase(w);
@@ -544,7 +553,7 @@ void nuutilaVisit(NuutilaDirectedGraph::vertex_descriptor& v,
 		}
 	}
 	else if (nuutilaVerticesSet.find(g[v].root) == nuutilaVerticesSet.end()) { // root[v] is not on the stack
-		assert(g[v].root<5);
+
 		nuutilaVerticesStack.push(g[v].root);
 		nuutilaVerticesSet.insert(g[v].root);
 	}
