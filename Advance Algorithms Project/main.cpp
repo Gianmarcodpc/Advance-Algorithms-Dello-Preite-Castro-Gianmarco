@@ -234,12 +234,17 @@ int main() {
 	//delete g;
 	//PearceDirectedGraph* g = createRandomPearceDirectedGraph(5);
 	//imperativePearceSCC(*g);
-	//NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(5);
-	//nuutilaSCC(*g);
-	//std::cout << nuutilaComponentsCount << std::endl;
-	//TarjanDirectedGraph* g = createRandomTarjanDirectedGraph(5);
-	//tarjanSCC(*g);
-	//std::cout << tarjanComponentsCount << std::endl;
+
+
+	TarjanDirectedGraph* g2 = createRandomTarjanDirectedGraph(600);
+	tarjanSCC(*g2);
+	std::cout << tarjanComponentsCount << std::endl;
+
+	NuutilaDirectedGraph *g = createRandomNuutilaDirectedGraph(600);
+	nuutilaSCC(*g);
+	std::cout << nuutilaComponentsCount << std::endl;
+	
+	
 	std::cin.get();
 	return 0;
 }
@@ -288,7 +293,7 @@ DirectedGraph* createRandomDirectedGraph(int numVertex) {
 */
 TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(time(NULL));
+	boost::random::mt19937 gen(0);
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -325,7 +330,7 @@ TarjanDirectedGraph* createRandomTarjanDirectedGraph(int numVertex) {
 */
 NuutilaDirectedGraph* createRandomNuutilaDirectedGraph(int numVertex) {
 
-	boost::random::mt19937 gen(time(NULL));
+	boost::random::mt19937 gen(0);
 	boost::random::uniform_int_distribution<> dist(1, 10000);
 	int treshold = dist(gen);
 
@@ -447,7 +452,7 @@ void tarjanStrongConnect(TarjanDirectedGraph::vertex_descriptor& v,
 
 		}
 	}
-	if ((g[v].lowpt == g[v].number) && (g[v].lowvine == g[v].number)) {
+	if (((g[v].lowvine == g[v].number) /*&& g[v].lowpt == g[v].number*/)) {
 
 		tarjanComponentsCount++;
 		
